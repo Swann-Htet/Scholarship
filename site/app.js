@@ -211,10 +211,25 @@
     const el = $('#heroScene'), cols = ['#FFB020', '#2DD4BF', '#8B7CFF', '#FF6B9A'], cx = 300, cy = 300, R = 165, Rb = 240;
     const seats = Array.from({ length: 8 }, (_, k) => { const a = (k * 45 - 90) * Math.PI / 180; return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, bx: cx + Math.cos(a) * Rb, by: cy + Math.sin(a) * Rb, c: cols[k % 4] }; });
     const links = seats.map(s => `<line class="link" x1="${cx}" y1="${cy}" x2="${s.x.toFixed(1)}" y2="${s.y.toFixed(1)}"/>`).join('');
-    const people = seats.map((s, k) => `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)})"><g class="av" style="animation-delay:${(-k * .45).toFixed(2)}s">
-      <path d="M-27 34C-27 8 27 8 27 34Z" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/><circle cx="0" cy="-10" r="18" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/></g></g>`).join('');
+    const skins = ['#F6D2B0', '#DDA67E', '#B5794F', '#80502F'], hairs = ['#2A2230', '#4B2E22', '#1D1A21', '#8A5A2B'], shirtG = ['sh0', 'sh1', 'sh2', 'sh3'];
+    const hair = (st, hc) => ({
+      0: [`<path d="M-19 -14C-24 -50 24 -50 19 -14C13 -30 -13 -30 -19 -14Z" fill="${hc}"/>`, ''],                                              // short crop
+      1: [`<path d="M-22 -16C-28 -52 28 -52 22 -16L25 16C16 9 -16 9 -25 16Z" fill="${hc}"/>`, `<path d="M-19 -18C-14 -34 12 -36 19 -18C10 -24 -8 -24 -19 -18Z" fill="${hc}"/>`], // long hair
+      2: [`<circle cx="0" cy="-47" r="10" fill="${hc}"/><path d="M-19 -14C-24 -50 24 -50 19 -14C13 -30 -13 -30 -19 -14Z" fill="${hc}"/>`, ''], // bun
+      3: [`<g fill="${hc}"><circle cx="-14" cy="-32" r="10"/><circle cx="0" cy="-38" r="11"/><circle cx="14" cy="-32" r="10"/><circle cx="-19" cy="-20" r="8"/><circle cx="19" cy="-20" r="8"/></g>`, '']  // curly
+    })[st];
+    const people = seats.map((s, k) => {
+      const sk = skins[(k * 3 + 1) % 4], hc = hairs[(k * 2 + 1) % 4], h = hair(k % 4, hc);
+      return `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)}) scale(1.12)"><g class="av" style="animation-delay:${(-k * .45).toFixed(2)}s">
+      <ellipse cx="0" cy="40" rx="30" ry="5" fill="#000" opacity=".12"/>${h[0]}
+      <path d="M-31 38C-31 12 -17 4 0 4C17 4 31 12 31 38Z" fill="url(#${shirtG[k % 4]})"/>
+      <path d="M-9 5L0 20L9 5" fill="${sk}"/><path d="M-9 5L0 20L9 5" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="-6" y="-6" width="12" height="13" rx="5" fill="${sk}"/><rect x="-6" y="-2" width="12" height="5" fill="#000" opacity=".1"/>
+      <circle cx="-17" cy="-14" r="4" fill="${sk}"/><circle cx="17" cy="-14" r="4" fill="${sk}"/>
+      <ellipse cx="0" cy="-16" rx="17" ry="19" fill="${sk}"/><ellipse cx="-6" cy="-23" rx="5" ry="8" fill="#fff" opacity=".2"/>${h[1]}</g></g>`;
+    }).join('');
     const bubbles = [0, 2, 4, 6].map((k, i) => { const s = seats[k], g = E.greetings[i]; return `<g class="bub" style="animation-delay:${i * 3}s"><rect x="${(s.bx - 62).toFixed(1)}" y="${(s.by - 24).toFixed(1)}" width="124" height="48" rx="24"/><text x="${s.bx.toFixed(1)}" y="${s.by.toFixed(1)}" style="font-family:${g[2]}">${g[0]}</text></g>`; }).join('');
-    el.innerHTML = `<svg class="hs" viewBox="-20 -10 640 620"><defs><radialGradient id="tbG"><stop offset="0" stop-color="#FFB020" stop-opacity=".35"/><stop offset="1" stop-color="#2DD4BF" stop-opacity=".18"/></radialGradient></defs>
+    el.innerHTML = `<svg class="hs" viewBox="-20 -10 640 620"><defs><radialGradient id="tbG"><stop offset="0" stop-color="#FFB020" stop-opacity=".35"/><stop offset="1" stop-color="#2DD4BF" stop-opacity=".18"/></radialGradient><linearGradient id="sh0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC95C"/><stop offset="1" stop-color="#E08A00"/></linearGradient><linearGradient id="sh1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5EEAD4"/><stop offset="1" stop-color="#0F9E8C"/></linearGradient><linearGradient id="sh2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A99BFF"/><stop offset="1" stop-color="#5A47E0"/></linearGradient><linearGradient id="sh3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8FB4"/><stop offset="1" stop-color="#E0457A"/></linearGradient></defs>
       <circle class="ringd" cx="${cx}" cy="${cy}" r="215"/><circle class="ringd2" cx="${cx}" cy="${cy}" r="118"/>${links}<circle class="table" cx="${cx}" cy="${cy}" r="92"/>
       <g class="logo-c"><circle cx="${cx - 16}" cy="${cy}" r="30" fill="#FFB020" fill-opacity=".85"/><circle cx="${cx + 16}" cy="${cy}" r="30" fill="#2DD4BF" fill-opacity=".75"/></g>${people}${bubbles}</svg>`;
   })();

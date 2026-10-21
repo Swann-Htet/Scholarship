@@ -564,3 +564,7 @@ body { background: var(--bg); font-feature-settings: "ss01"; }
 .hero > .doodle { z-index: 1; opacity: .9; }
 
 .scene { max-width: none; overflow: visible; }
+
+/* no scrollbar (page still scrolls with wheel, touch, keys) */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; }
