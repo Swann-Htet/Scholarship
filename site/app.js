@@ -212,8 +212,7 @@
     const seats = Array.from({ length: 8 }, (_, k) => { const a = (k * 45 - 90) * Math.PI / 180; return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, bx: cx + Math.cos(a) * Rb, by: cy + Math.sin(a) * Rb, c: cols[k % 4] }; });
     const links = seats.map(s => `<line class="link" x1="${cx}" y1="${cy}" x2="${s.x.toFixed(1)}" y2="${s.y.toFixed(1)}"/>`).join('');
     const people = seats.map((s, k) => `<g transform="translate(${s.x.toFixed(1)} ${s.y.toFixed(1)})"><g class="av" style="animation-delay:${(-k * .45).toFixed(2)}s">
-      <path d="M-27 34C-27 8 27 8 27 34Z" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/><circle cx="0" cy="-10" r="18" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/>
-      <circle cx="-6" cy="-12" r="2" fill="var(--bg)"/><circle cx="6" cy="-12" r="2" fill="var(--bg)"/><path d="M-6 -4q6 6 12 0" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></g></g>`).join('');
+      <path d="M-27 34C-27 8 27 8 27 34Z" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/><circle cx="0" cy="-10" r="18" fill="${s.c}" stroke="var(--bg)" stroke-width="3"/></g></g>`).join('');
     const bubbles = [0, 2, 4, 6].map((k, i) => { const s = seats[k], g = E.greetings[i]; return `<g class="bub" style="animation-delay:${i * 3}s"><rect x="${(s.bx - 62).toFixed(1)}" y="${(s.by - 24).toFixed(1)}" width="124" height="48" rx="24"/><text x="${s.bx.toFixed(1)}" y="${s.by.toFixed(1)}" style="font-family:${g[2]}">${g[0]}</text></g>`; }).join('');
     el.innerHTML = `<svg class="hs" viewBox="-20 -10 640 620"><defs><radialGradient id="tbG"><stop offset="0" stop-color="#FFB020" stop-opacity=".35"/><stop offset="1" stop-color="#2DD4BF" stop-opacity=".18"/></radialGradient></defs>
       <circle class="ringd" cx="${cx}" cy="${cy}" r="215"/><circle class="ringd2" cx="${cx}" cy="${cy}" r="118"/>${links}<circle class="table" cx="${cx}" cy="${cy}" r="92"/>
@@ -231,7 +230,8 @@
       tri: '<svg viewBox="0 0 24 24"><path class="st" d="M12 3L22 21H2Z"/></svg>',
       ring: '<svg viewBox="0 0 48 48"><circle class="st" cx="24" cy="24" r="20" stroke-dasharray="3 7"/></svg>'
     };
-    const D = [['why', 'star', 88, 8, 56, 't', 'dd-pulse'], ['why', 'squig', 4, 78, 130, 'a', 'dd-draw dm'], ['why', 'ring', 78, 70, 70, 'p', 'dd-spin dm'],
+    const D = [['hero', 'star', 52, 14, 54, 'a', 'dd-pulse'], ['hero', 'plus', 94, 18, 40, 't', 'dd-spin'], ['hero', 'dots', 90, 70, 80, 'p', 'dd-float'], ['hero', 'squig', 56, 84, 140, 't', 'dd-draw'], ['hero', 'loop', 74, 6, 130, 'a', 'dd-draw dm'], ['hero', 'tri', 48, 60, 40, 'p', 'dd-float dm'], ['hero', 'ring', 62, 66, 90, 'a', 'dd-spin dm'], ['hero', 'star', 95, 48, 36, 't', 'dd-float'],
+      ['why', 'star', 88, 8, 56, 't', 'dd-pulse'], ['why', 'squig', 4, 78, 130, 'a', 'dd-draw dm'], ['why', 'ring', 78, 70, 70, 'p', 'dd-spin dm'],
       ['objectives', 'plus', 91, 6, 36, 'a', 'dd-spin'], ['objectives', 'star', 3, 42, 40, 't', 'dd-float dm'], ['objectives', 'dots', 90, 88, 64, 'p', 'dd-float dm'],
       ['panel', 'loop', 86, 6, 120, 't', 'dd-draw dm'], ['panel', 'dots', 2, 78, 70, 'a', 'dd-float'], ['panel', 'star', 52, 92, 34, 'p', 'dd-pulse dm'],
       ['rules', 'star', 92, 8, 46, 'a', 'dd-pulse'], ['rules', 'tri', 3, 62, 36, 't', 'dd-float dm'],

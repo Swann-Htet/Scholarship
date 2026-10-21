@@ -558,3 +558,9 @@ body { background: var(--bg); font-feature-settings: "ss01"; }
 [data-theme="light"] .tab[aria-selected="true"], [data-theme="light"] .links a.active { color: #1D1B26; }
 
 @media (prefers-reduced-motion: reduce) { .drift, .doodle, .doodle .st, .hs *, .scene * { animation: none !important; } .h2::after { clip-path: inset(0); } }
+
+/* scene extends past the viewport on every side so no edge strip shows */
+.scene { top: -10vh; left: -12vw; width: 124vw; height: 124vh; }
+.hero > .doodle { z-index: 1; opacity: .9; }
+
+.scene { max-width: none; overflow: visible; }
