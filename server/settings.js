@@ -1,6 +1,8 @@
 import { defaultSettings, FONT_OPTIONS, SECTION_KEYS } from '../shared/defaultSettings.js';
 import { Setting, Asset } from './models.js';
 import { stripUnsafe } from '../shared/emailTemplate.js';
+import { uniqueLabels } from '../shared/layout.js';
+import { Registration } from './models.js';
 
 const clone = o => JSON.parse(JSON.stringify(o));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -35,6 +37,23 @@ const tpl = (t, fb) => ({
   html: str(t?.html, 30000, '').trim() ? stripUnsafe(str(t.html, 30000, fb.html)) : fb.html
 });
 const GROUPS = ['organizer', 'contributor', 'staff'];
+const numc = (v, min, max, fb, dp = 2) => { const n = Number(v); return Number.isFinite(n) ? Math.round(Math.min(max, Math.max(min, n)) * 10 ** dp) / 10 ** dp : fb; };
+function cleanLayout(inp, fb) {
+  if (!isObj(inp) || !Array.isArray(inp.seats) || !inp.seats.length) return fb;
+  const st = isObj(inp.stage) ? inp.stage : {}, tr = isObj(inp.tier) ? inp.tier : {}, ids = new Set();
+  let seats = inp.seats.slice(0, 500).map((s, n) => {
+    let id = typeof s?.id === 'string' && /^[A-Za-z0-9_-]{1,24}$/.test(s.id) ? s.id : 'n' + n + Math.random().toString(36).slice(2, 7);
+    while (ids.has(id)) id += 'x'; ids.add(id);
+    const label = String(s?.label ?? '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8) || 'S' + (n + 1);
+    return { id, label, x: numc(s?.x, -80, 80, 0), z: numc(s?.z, -20, 120, 5), r: numc(s?.r, -720, 720, 180, 1) };
+  });
+  seats = uniqueLabels(seats);
+  return {
+    stage: { x: numc(st.x, -80, 80, 0), z: numc(st.z, -20, 120, -0.4), w: numc(st.w, 1, 60, 5, 1), d: numc(st.d, 0.5, 20, 2.2, 1) },
+    tier: { on: bool(tr.on, true), step: numc(tr.step, 0, 1.5, 0.3), start: numc(tr.start, 0, 60, 3.6), pitch: numc(tr.pitch, 0.2, 10, 1.25) },
+    seats
+  };
+}
 const ICONS = ['i-lang', 'i-culture', 'i-incl', 'i-prac'];
 
 export function sanitize(input) {
@@ -63,9 +82,9 @@ export function sanitize(input) {
     email: { otp: tpl(em.otp, d0.email.otp), ticket: tpl(em.ticket, d0.email.ticket) },
     registration: {
       allowedDomains: (() => { const d = domains(rg.allowedDomains, d0.registration.allowedDomains); return d.length ? d : d0.registration.allowedDomains; })(),
-      showSeatMap: bool(rg.showSeatMap, d0.registration.showSeatMap),
-      seatCols: Math.round(num(rg.seatCols, 4, 20, d0.registration.seatCols))
+      showSeatMap: bool(rg.showSeatMap, d0.registration.showSeatMap)
     },
+    seating: { layout: cleanLayout(isObj(i.seating) ? i.seating.layout : null, d0.seating.layout) },
     sections: Object.fromEntries(SECTION_KEYS.map(k => [k, bool(se[k], d.sections[k])])),
     content: {
       greetings: tuples(co.greetings, 3, d.content.greetings, 16, 120),
@@ -82,11 +101,26 @@ export function sanitize(input) {
   };
 }
 
+/**
+ * Registrations store a seat LABEL. When the admin renames seats, people must follow the physical seat (matched by id),
+ * and people on seats that no longer exist lose their seat (they show up as "without a seat" in Admin > Seats).
+ */
+async function migrateSeats(prev, next) {
+  const prevById = new Map(prev.seats.map(s => [s.id, s]));
+  const moves = next.seats.filter(s => prevById.has(s.id) && prevById.get(s.id).label !== s.label).map(s => ({ id: s.id, from: prevById.get(s.id).label, to: s.label }));
+  for (const m of moves) await Registration.updateMany({ seat: m.from }, { seat: 'tmp:' + m.id });
+  for (const m of moves) await Registration.updateMany({ seat: 'tmp:' + m.id }, { seat: m.to });
+  const res = await Registration.updateMany({ seat: { $exists: true, $nin: next.seats.map(s => s.label) } }, { $unset: { seat: 1 } });
+  return res.modifiedCount || 0;
+}
+
 export async function saveSettings(input) {
   const data = sanitize(input);
+  const before = await getSettings();
   await Setting.findOneAndUpdate({ key: 'site' }, { key: 'site', data }, { upsert: true, new: true });
+  const unseated = await migrateSeats(before.seating.layout, data.seating.layout);
   // delete uploaded images that nothing uses any more (keep anything uploaded in the last hour, it may be about to be used)
   const used = [data.branding.logoId, ...data.content.people.map(p => p.photo)].filter(Boolean);
   await Asset.deleteMany({ _id: { $nin: used }, createdAt: { $lt: new Date(Date.now() - 3600e3) } });
-  return data;
+  return { data, unseated };
 }

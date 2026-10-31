@@ -177,8 +177,23 @@ The **owner** is the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your environment. In 
 
 - **Visitors** see an animated 3D seating plan (seats rise in row by row, people appear on taken seats). They cannot pick a seat. After registering, their own seat gets a glowing beam and the camera flies to it. The saved ticket refreshes its seat from the server, so if an admin moves them, they see the new seat.
 - **Admins** use **Admin → Seats**: click a person (on the map or in the lists), then click a free seat to move them, or another person's seat to swap. **Seat everyone** assigns all confirmed people without a seat. Waitlist people have no seat; moving someone to the waitlist frees their seat.
-- The number of seats is the capacity (Admin → Content → Event details); **Seats per row** changes the shape. You can hide the plan with **Show the 3D seating plan** (Admin → Content → Registration rules).
+- **The room is yours to design** in **Admin → Seat layout** (see below). Rows A to H are just the starting layout.
+- You can hide the plan with **Show the 3D seating plan** (Admin → Content → Registration rules).
 - Drawn with three.js, loaded only when the section comes into view. On laptops drag to look around; on phones the plan sways gently. Reduced-motion users get a calm version.
+
+### Seat layout editor (Admin → Seat layout)
+
+A top-down editor where **every seat is a movable object**, so the plan can match any room:
+
+- **Drag** any seat to move it. **Drag on the floor** to select many (Shift adds to the selection). The mouse wheel zooms; hold Alt or the middle mouse button to pan.
+- **Toolbar:** add a seat by clicking the floor, delete, duplicate, align (left / centre / right / top / middle / bottom), space evenly, rotate 15°, turn towards the stage, snap to a grid, undo / redo. Keys: arrows nudge, Del deletes, Ctrl+Z / Ctrl+Y undo / redo, Ctrl+D duplicates, Ctrl+A selects all.
+- **Selection panel:** exact label, position and rotation of a seat; width, depth and position of the stage.
+- **Generate a layout:** curved rows, straight rows, or straight rows with aisles, with your own number of rows and seats, spacing and distance from the stage. You can still move every seat afterwards.
+- **Auto-label rows:** names the rows A, B, C… from the stage backwards and numbers seats left to right.
+- **Raised floor:** rows further back can be higher, like a cinema.
+- **3D preview** shows the result as visitors will see it.
+- Changes are saved with **Save changes**. **People keep their physical seat**: renaming or swapping seat labels moves the people with the seats. If you delete a seat, the person sitting there loses their seat and shows up under "Without a seat" in **Admin → Seats**, where you can seat them again.
+- Seats are handed out closest to the stage first, from the middle outwards, whatever the shape. The "Capacity setting" is how many people can be confirmed before the waitlist starts; the editor shows a button to match it to your seat count.
 
 ---
 
@@ -188,7 +203,8 @@ The **owner** is the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your environment. In 
 |---|---|
 | Dashboard | Totals, capacity bar, registrations per day, latest sign-ups |
 | Registrations | Search, seat, switch confirmed ⇄ waitlist, tick check-in, delete, **copy emails**, **export CSV** |
-| Seats | 3D seat editor: move or swap people, seat everyone |
+| Seats | 3D view: move or swap people between seats, seat everyone |
+| Seat layout | Design the room: drag every seat, generate rows and aisles, move the stage |
 | Check-in | QR scanner and volunteer check-in links |
 | Admins | Add / remove admins, reset passwords |
 | Security | See and unfreeze frozen visitors |

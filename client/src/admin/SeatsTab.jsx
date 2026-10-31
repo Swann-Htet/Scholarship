@@ -47,7 +47,7 @@ export default function SeatsTab({ onAuthError, flash }) {
         <h2>Seating plan</h2>
         <p className="muted">{data.seated.length} seated · {data.unseated.length} confirmed without a seat · {data.waitlist} on the waitlist. Click a person, then a free seat to move them, or another person to swap.</p>
         <Suspense fallback={<div className="sk" style={{ height: 320, borderRadius: 16, marginTop: 12 }} />}>
-          <SeatMap3D admin capacity={data.capacity} cols={data.cols} taken={Object.keys(bySeat)} occupants={occupants} selected={person?.seat || ''} onSelect={onSeat} />
+          <SeatMap3D admin layout={data.layout} taken={Object.keys(bySeat)} occupants={occupants} selected={person?.seat || ''} onSelect={onSeat} />
         </Suspense>
         {person && (
           <div className="seat-sel">

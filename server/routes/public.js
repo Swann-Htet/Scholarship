@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { Registration, Pending, CheckinLink } from '../models.js';
 import { getSettings } from '../settings.js';
-import { seatLabels, seatOrder } from '../../shared/seats.js';
+import { seatOrder } from '../../shared/layout.js';
 import { hit, blockIp, strike, rejectBlocked, blockBody, sha256, secret, clientIp, wrap, LOCK_MINUTES } from '../security.js';
 import { sendOtp, sendTicket, devOtp } from '../mailer.js';
 import { Asset } from '../models.js';
@@ -54,7 +54,7 @@ router.get('/seats', wrap(async (_req, res) => {
   const s = await getSettings();
   const taken = [...(await takenSeats())];
   res.set('Cache-Control', 'no-store');
-  res.json({ capacity: s.event.capacity, cols: s.registration.seatCols, taken });
+  res.json({ capacity: s.event.capacity, taken });
 }));
 
 // A signed, time-stamped token proves the form was really loaded and filled in by a person (bots that post directly have none).
@@ -134,7 +134,7 @@ router.post('/register/verify', rejectBlocked, wrap(async (req, res) => {
   if (await Registration.exists({ $or: [{ email }, { emailKey: p.emailKey }, { lineIdKey }] })) { await Pending.deleteOne({ email }); return fail(res, 409, 'This MFU email or LINE ID is already registered.'); }
   const confirmed = await Registration.countDocuments({ status: 'confirmed' });
   const status = confirmed >= settings.event.capacity ? 'waitlist' : 'confirmed';
-  const order = seatOrder(settings.event.capacity, settings.registration.seatCols);
+  const order = seatOrder(settings.seating.layout); // closest to the stage first
 
   for (let attempt = 0; attempt < 6; attempt++) {
     let seat;

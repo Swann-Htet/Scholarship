@@ -124,7 +124,7 @@ function Frozen({ info }) {
 }
 
 export default function Register({ settings }) {
-  const e = settings.event, rg = settings.registration || { allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], showSeatMap: true, seatCols: 10 };
+  const e = settings.event, rg = settings.registration || { allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], showSeatMap: true };
   const [vals, setVals] = useState({ name: '', email: '', lineId: '' });
   const [errs, setErrs] = useState({});
   const [touched, setTouched] = useState({});
@@ -213,7 +213,7 @@ export default function Register({ settings }) {
 
   const reset = () => { try { localStorage.removeItem(TICKET_KEY); } catch { /* ignore */ } setTicket(null); setVals({ name: '', email: '', lineId: '' }); setErrs({}); setTouched({}); setPhase('form'); loadSeats(); api.formToken().then(t => { token.current = t.token; }).catch(() => {}); };
 
-  const showPlan = rg.showSeatMap !== false && !!seatInfo;
+  const showPlan = rg.showSeatMap !== false && !!seatInfo && !!settings.seating?.layout;
 
   return (
     <section className="sec" id="register"><Doodles id="register" />
@@ -243,9 +243,9 @@ export default function Register({ settings }) {
                   <div className="seat-legend" aria-hidden="true"><span><i className="free" />Free</span><span><i className="taken" />Taken</span><span><i className="mine" />Yours</span></div>
                 </div>
                 <Suspense fallback={<div className="sk seat-skeleton" />}>
-                  <SeatMap3D capacity={seatInfo.capacity} cols={seatInfo.cols} taken={seatInfo.taken} />
+                  <SeatMap3D layout={settings.seating.layout} taken={seatInfo.taken} />
                 </Suspense>
-                <p className="seat-picked">{seatInfo.taken.length} of {seatInfo.capacity} seats taken</p>
+                <p className="seat-picked">{seatInfo.taken.length} of {settings.seating.layout.seats.length} seats taken</p>
               </div>
             )}
 
@@ -296,7 +296,7 @@ export default function Register({ settings }) {
           <div className="card seat-card" style={{ marginTop: 22 }}>
             <div className="seat-head"><div><h3>Your seat: {ticket.seat}</h3><p className="hint">Look for the glowing beam. If the organisers move your seat, this updates.</p></div></div>
             <Suspense fallback={<div className="sk seat-skeleton" />}>
-              <SeatMap3D capacity={seatInfo.capacity} cols={seatInfo.cols} taken={seatInfo.taken} mine={ticket.seat} />
+              <SeatMap3D layout={settings.seating.layout} taken={seatInfo.taken} mine={ticket.seat} />
             </Suspense>
           </div>
         )}

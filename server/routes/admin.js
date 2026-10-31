@@ -8,7 +8,7 @@ import { getSettings, saveSettings } from '../settings.js';
 import { hashPassword, verifyPassword } from '../password.js';
 import { hit, blockIp, blockBody, rejectBlocked, sha256, clientIp, wrap } from '../security.js';
 import { checkIn } from '../checkin.js';
-import { seatLabels, seatOrder } from '../../shared/seats.js';
+import { layoutLabels, seatOrder } from '../../shared/layout.js';
 
 const router = Router();
 const MIN = 60 * 1000;
@@ -80,7 +80,7 @@ router.get('/registrations.csv', wrap(async (_req, res) => {
 
 // give a person a seat, move them, or swap with whoever sits there (admin seat editor)
 async function setSeat(reg, targetRaw) {
-  const settings = await getSettings(), labels = seatLabels(settings.event.capacity, settings.registration.seatCols), target = String(targetRaw || '').toUpperCase().trim();
+  const settings = await getSettings(), labels = layoutLabels(settings.seating.layout), target = String(targetRaw || '').toUpperCase().trim();
   if (reg.status !== 'confirmed') return { error: 'Only confirmed registrations have seats.' };
   if (!target) { await Registration.updateOne({ _id: reg._id }, { $unset: { seat: 1 } }); return { ok: true }; }
   if (!labels.includes(target)) return { error: 'That seat does not exist.' };
@@ -100,11 +100,11 @@ router.get('/seatmap', wrap(async (_req, res) => {
   const s = await getSettings();
   const confirmed = await Registration.find({ status: 'confirmed' }).sort({ createdAt: 1 }).select('name email seat checkedIn ticketCode').lean();
   const waitlist = await Registration.countDocuments({ status: 'waitlist' });
-  res.json({ capacity: s.event.capacity, cols: s.registration.seatCols, seated: confirmed.filter(r => r.seat), unseated: confirmed.filter(r => !r.seat), waitlist });
+  res.json({ capacity: s.event.capacity, layout: s.seating.layout, seated: confirmed.filter(r => r.seat), unseated: confirmed.filter(r => !r.seat), waitlist });
 }));
 
 router.post('/seatmap/auto-assign', wrap(async (_req, res) => {
-  const s = await getSettings(), order = seatOrder(s.event.capacity, s.registration.seatCols);
+  const s = await getSettings(), order = seatOrder(s.seating.layout);
   const taken = new Set(await Registration.distinct('seat', { seat: { $exists: true, $ne: null } }));
   const people = await Registration.find({ status: 'confirmed', seat: { $exists: false } }).sort({ createdAt: 1 }).select('_id');
   let n = 0;
@@ -138,7 +138,7 @@ router.delete('/registrations/:id', wrap(async (req, res) => {
 
 // ---------------- settings ----------------
 router.get('/settings', wrap(async (_req, res) => res.json(await getSettings())));
-router.put('/settings', wrap(async (req, res) => res.json(await saveSettings(req.body))));
+router.put('/settings', wrap(async (req, res) => { const { data, unseated } = await saveSettings(req.body); res.json({ ...data, _unseated: unseated }); }));
 
 // ---------------- uploaded images (logo, people photos) ----------------
 const MAGIC = { 'image/png': b => b.length > 8 && b.readUInt32BE(0) === 0x89504e47, 'image/jpeg': b => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff, 'image/webp': b => b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP' };

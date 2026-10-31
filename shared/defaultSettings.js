@@ -2,6 +2,7 @@
 // Imported by both the Express server and the React client.
 
 import { DEFAULT_EMAIL } from './emailTemplate.js';
+import { defaultLayout } from './layout.js';
 
 export const FONT_OPTIONS = {
   display: [
@@ -75,9 +76,9 @@ export const defaultSettings = {
   email: JSON.parse(JSON.stringify(DEFAULT_EMAIL)), // editable in Admin > Emails
   registration: {
     allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], // only these email domains can register (one registration per email)
-    showSeatMap: true, // show the animated 3D seating plan on the registration section (seats are always assigned automatically; admins can move people)
-    seatCols: 10 // seats per row on the seat map
+    showSeatMap: true // show the animated 3D seating plan on the registration section (seats are always assigned automatically; admins can move people)
   },
+  seating: { layout: defaultLayout() }, // every seat is a movable object: edit it in Admin > Seat layout
   sections: { why: true, objectives: true, panel: true, workshop: true, rules: true, schedule: true, team: true, info: true },
   content: {
     greetings: [ // [text, language label, font stack]

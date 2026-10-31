@@ -6,6 +6,7 @@ import Registrations from './Registrations.jsx';
 import { CheckinTab, AdminsTab, SecurityTab } from './ExtraTabs.jsx';
 import EmailTab from './EmailTab.jsx';
 import SeatsTab from './SeatsTab.jsx';
+import LayoutTab from './LayoutTab.jsx';
 import { DesignTab, AnimationTab, ContentTab } from './SettingsTabs.jsx';
 import { defaultSettings } from '../../../shared/defaultSettings.js';
 
@@ -13,6 +14,7 @@ const TABS = [
   ['dashboard', 'Dashboard', 'M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-3H4z'],
   ['registrations', 'Registrations', 'M16 11a4 4 0 1 0-8 0M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6'],
   ['seats', 'Seats', 'M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3M3 14a2 2 0 0 1 2-2 2 2 0 0 1 2 2v2h10v-2a2 2 0 0 1 4 0v4H3zM6 20v1M18 20v1'],
+  ['layout', 'Seat layout', 'M3 5h18v6H3zM5 14h4v4H5zM10 14h4v4h-4zM15 14h4v4h-4z'],
   ['checkin', 'Check-in', 'M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 12h8'],
   ['admins', 'Admins', 'M12 3l8 3v6c0 4.500-3.400 8-8 9-4.600-1-8-4.500-8-9V6zM9 12l2 2 4-4'],
   ['security', 'Security', 'M12 3l9 16H3zM12 10v4M12 17v.500'],
@@ -70,13 +72,13 @@ export default function Admin() {
   const dirty = draft && JSON.stringify(draft) !== JSON.stringify(settings);
   const save = async () => {
     setSaving(true);
-    try { const s = await api.saveSettings(draft); setSettings(s); setDraft(s); setPreviewKey(k => k + 1); flash('Saved. Your website is updated.'); }
+    try { const { _unseated, ...s } = await api.saveSettings(draft); setSettings(s); setDraft(s); setPreviewKey(k => k + 1); flash(_unseated ? `Saved. ${_unseated} ${_unseated === 1 ? 'person lost their' : 'people lost their'} seat because it no longer exists. See the Seats tab.` : 'Saved. Your website is updated.'); }
     catch (e) { if (!onAuthError(e)) flash(e.message, true); } finally { setSaving(false); }
   };
 
   if (!authed) return <Login onDone={() => setAuthed(true)} />;
 
-  const settingsTab = ['design', 'animation', 'content', 'email'].includes(tab);
+  const settingsTab = ['design', 'animation', 'content', 'email', 'layout'].includes(tab);
   return (
     <div className="admin">
       <aside className="a-side">
@@ -109,8 +111,9 @@ export default function Admin() {
         {tab === 'admins' && <AdminsTab onAuthError={onAuthError} flash={flash} />}
         {tab === 'security' && <SecurityTab onAuthError={onAuthError} flash={flash} />}
         {settingsTab && !draft && <div className="a-card"><div className="sk sk-line" style={{ width: '30%' }} /><div className="sk sk-line" style={{ width: '80%', marginTop: 14 }} /><div className="sk sk-line" style={{ width: '65%', marginTop: 14 }} /></div>}
+        {tab === 'layout' && draft && <LayoutTab draft={draft} setDraft={setDraft} flash={flash} />}
         {tab === 'email' && draft && <EmailTab draft={draft} setDraft={setDraft} flash={flash} onAuthError={onAuthError} />}
-        {settingsTab && draft && tab !== 'email' && (
+        {settingsTab && draft && tab !== 'email' && tab !== 'layout' && (
           <div className="a-split">
             <div className="a-form">
               {tab === 'design' && <DesignTab draft={draft} setDraft={setDraft} flash={flash} onAuthError={onAuthError} />}

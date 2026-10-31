@@ -135,3 +135,20 @@ body.admin-body ::-webkit-scrollbar-thumb { background: #cfc9bd; border-radius: 
 .seat-person { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; text-align: left; width: 100%; padding: 10px 12px; margin-bottom: 6px; border: 1px solid #e8e3d8; border-radius: 12px; background: #fff; cursor: pointer; font-family: inherit; color: inherit; transition: background .2s, border-color .2s; }
 .seat-person:hover { background: #f7f4ec; } .seat-person.on { border-color: #2d8ff0; background: #eef6ff; }
 .seat-person b { font-size: .92rem; } .seat-person span { grid-column: 1; color: #6b6872; font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .seat-person em { grid-row: 1 / 3; grid-column: 2; align-self: center; font: 700 .95rem 'DM Mono', monospace; font-style: normal; background: #1D1B26; color: #fff; padding: 3px 8px; border-radius: 8px; }
+
+/* seat layout editor */
+.lay { display: grid; gap: 16px; align-items: start; } @media (min-width: 1200px) { .lay { grid-template-columns: minmax(0, 1fr) 340px; } }
+.lay-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 12px; } .lay-sep { width: 1px; height: 22px; background: #e1dccf; margin: 0 4px; }
+.a-btn.tiny { padding: 6px 10px; font-size: .8rem; border-radius: 8px; } .a-btn.tiny.on { background: #1D1B26; color: #fff; border-color: #1D1B26; }
+.lay-chk { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; cursor: pointer; } .lay-bar select { width: auto; padding: 6px 8px; font-size: .8rem; }
+.lay-wrap { outline: none; } .lay-wrap:focus-visible { box-shadow: 0 0 0 3px rgba(45,212,191,.3); border-radius: 14px; }
+.lay-svg { display: block; width: 100%; aspect-ratio: 16 / 10; background: #fbf9f4; border: 1px solid #e8e3d8; border-radius: 14px; touch-action: none; user-select: none; cursor: default; } .lay-svg.tool-add { cursor: crosshair; }
+.lay-seat { cursor: grab; } .lay-seat rect { fill: #2DD4BF; stroke: #0f8e80; stroke-width: .03; } .lay-seat .back { fill: #1ea896; } .lay-seat text { fill: #06332e; font-weight: 700; pointer-events: none; }
+.lay-seat:hover rect { fill: #5eeadb; } .lay-seat.sel rect { fill: #6ea8ff; stroke: #1d62d6; stroke-width: .06; } .lay-seat.sel .back { fill: #3b84f0; } .lay-seat.dup rect { fill: #ffb3a6; stroke: #d23b22; }
+.lay-stage { cursor: grab; } .lay-stage rect { stroke: #8a6a1f; stroke-width: .04; } .lay-stage.sel rect { stroke: #1d62d6; stroke-width: .12; }
+.lay-box { fill: rgba(110,168,255,.15); stroke: #3b84f0; stroke-width: .05; stroke-dasharray: .2 .15; pointer-events: none; }
+.lay-help { margin: 10px 2px 0; font-size: .8rem; color: #8a8692; }
+.lay-sum { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 12px; font-size: .88rem; } .lay-warn { color: #b3261e; }
+.lay-side { display: grid; gap: 14px; } .lay-side .a-card { margin: 0; }
+.lay-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; } .lay-num { display: grid; gap: 4px; } .lay-num.wide { grid-column: 1 / -1; } .lay-num small { color: #8a8692; font-size: .74rem; font-weight: 600; }
+.lay-main .seatmap { margin-top: 14px; }
