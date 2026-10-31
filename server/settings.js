@@ -63,7 +63,7 @@ export function sanitize(input) {
     email: { otp: tpl(em.otp, d0.email.otp), ticket: tpl(em.ticket, d0.email.ticket) },
     registration: {
       allowedDomains: (() => { const d = domains(rg.allowedDomains, d0.registration.allowedDomains); return d.length ? d : d0.registration.allowedDomains; })(),
-      seatSelection: bool(rg.seatSelection, d0.registration.seatSelection),
+      showSeatMap: bool(rg.showSeatMap, d0.registration.showSeatMap),
       seatCols: Math.round(num(rg.seatCols, 4, 20, d0.registration.seatCols))
     },
     sections: Object.fromEntries(SECTION_KEYS.map(k => [k, bool(se[k], d.sections[k])])),

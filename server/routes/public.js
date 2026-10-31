@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { Registration, Pending, CheckinLink } from '../models.js';
 import { getSettings } from '../settings.js';
-import { seatLabels } from '../../shared/seats.js';
+import { seatLabels, seatOrder } from '../../shared/seats.js';
 import { hit, blockIp, strike, rejectBlocked, blockBody, sha256, secret, clientIp, wrap, LOCK_MINUTES } from '../security.js';
 import { sendOtp, sendTicket, devOtp } from '../mailer.js';
 import { Asset } from '../models.js';
@@ -54,7 +54,7 @@ router.get('/seats', wrap(async (_req, res) => {
   const s = await getSettings();
   const taken = [...(await takenSeats())];
   res.set('Cache-Control', 'no-store');
-  res.json({ capacity: s.event.capacity, cols: s.registration.seatCols, selectable: s.registration.seatSelection, taken });
+  res.json({ capacity: s.event.capacity, cols: s.registration.seatCols, taken });
 }));
 
 // A signed, time-stamped token proves the form was really loaded and filled in by a person (bots that post directly have none).
@@ -92,15 +92,6 @@ router.post('/register/start', rejectBlocked, wrap(async (req, res) => {
   const emailKey = emailKeyOf(email), lineIdKey = lineId.toLowerCase();
   if (await Registration.exists({ $or: [{ email }, { emailKey }, { lineIdKey }] })) return fail(res, 409, 'This MFU email or LINE ID is already registered. Each email can register once.');
 
-  // optional seat choice
-  let seat = null;
-  if (b.seat) {
-    const labels = seatLabels(settings.event.capacity, settings.registration.seatCols);
-    seat = String(b.seat).toUpperCase();
-    if (!labels.includes(seat)) return fail(res, 400, 'That seat does not exist.');
-    if ((await takenSeats(email)).has(seat)) return fail(res, 409, 'Sorry, that seat was just taken. Please pick another.', { seatTaken: true });
-  }
-
   // resend rules
   const existing = await Pending.findOne({ email });
   if (existing?.lastSentAt) {
@@ -110,7 +101,7 @@ router.post('/register/start', rejectBlocked, wrap(async (req, res) => {
   if (await hit('otp:' + emailKey, 15 * MIN) > 5) { const k = await blockIp(req, 'requested too many verification codes'); return res.status(429).json(blockBody(k)); }
 
   const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-  await Pending.findOneAndUpdate({ email }, { email, emailKey, name, lineId, seat, otpHash: otpHash(code, emailKey), attempts: 0, lastSentAt: new Date(), ip: clientIp(req), userAgent: String(req.headers['user-agent'] || '').slice(0, 200), expiresAt: new Date(Date.now() + OTP_MINUTES * MIN) }, { upsert: true });
+  await Pending.findOneAndUpdate({ email }, { email, emailKey, name, lineId, seat: null, otpHash: otpHash(code, emailKey), attempts: 0, lastSentAt: new Date(), ip: clientIp(req), userAgent: String(req.headers['user-agent'] || '').slice(0, 200), expiresAt: new Date(Date.now() + OTP_MINUTES * MIN) }, { upsert: true });
   try { await sendOtp({ to: email, name, code, minutes: OTP_MINUTES, settings, siteUrl: siteUrl(req) }); }
   catch (e) {
     await Pending.deleteOne({ email });
@@ -143,13 +134,13 @@ router.post('/register/verify', rejectBlocked, wrap(async (req, res) => {
   if (await Registration.exists({ $or: [{ email }, { emailKey: p.emailKey }, { lineIdKey }] })) { await Pending.deleteOne({ email }); return fail(res, 409, 'This MFU email or LINE ID is already registered.'); }
   const confirmed = await Registration.countDocuments({ status: 'confirmed' });
   const status = confirmed >= settings.event.capacity ? 'waitlist' : 'confirmed';
-  const labels = seatLabels(settings.event.capacity, settings.registration.seatCols);
+  const order = seatOrder(settings.event.capacity, settings.registration.seatCols);
 
   for (let attempt = 0; attempt < 6; attempt++) {
     let seat;
     if (status === 'confirmed') {
       const taken = await takenSeats(email);
-      seat = p.seat && !taken.has(p.seat) ? p.seat : labels.find(l => !taken.has(l));
+      seat = order.find(l => !taken.has(l)); // front row first, from the middle outwards
     }
     try {
       const doc = await Registration.create({ name: p.name, email, emailKey: p.emailKey, emailVerified: true, lineId: p.lineId, lineIdKey, status, ticketCode: newCode(), ip: clientIp(req), ...(seat ? { seat } : {}) });
@@ -160,13 +151,24 @@ router.post('/register/verify', rejectBlocked, wrap(async (req, res) => {
     } catch (e) {
       if (e.code === 11000) {
         const key = Object.keys(e.keyPattern || {})[0];
-        if (key === 'ticketCode' || key === 'seat') { p.seat = null; continue; } // someone took the seat first: pick the next free one
+        if (key === 'ticketCode' || key === 'seat') continue; // someone took that seat first: pick the next free one
         return fail(res, 409, 'This MFU email or LINE ID is already registered.');
       }
       throw e;
     }
   }
   fail(res, 500, 'Could not create your ticket. Please try again.');
+}));
+
+// the visitor's saved ticket asks for its current seat (an admin may have moved it)
+router.get('/ticket/:code', rejectBlocked, wrap(async (req, res) => {
+  const code = String(req.params.code || '').toUpperCase();
+  if (!/^GDC-[A-Z0-9]{6}$/.test(code)) return fail(res, 404, 'Ticket not found.');
+  if (await hit('ticket:' + clientIp(req), 15 * MIN) > 120) return fail(res, 429, 'Too many requests.');
+  const r = await Registration.findOne({ ticketCode: code }).select('name seat status').lean();
+  if (!r) return fail(res, 404, 'Ticket not found.');
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, name: r.name, seat: r.seat || null, status: r.status });
 }));
 
 // ---------------- check-in by shared link (for volunteers, no login) ----------------

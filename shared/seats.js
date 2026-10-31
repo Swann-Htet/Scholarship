@@ -8,3 +8,15 @@ export const rowLetter = r => {
 
 export const seatLabels = (capacity, cols) =>
   Array.from({ length: Math.max(0, capacity) }, (_, i) => rowLetter(Math.floor(i / cols)) + ((i % cols) + 1));
+
+/** The order seats are handed out: front row first, from the middle of each row outwards. */
+export function seatOrder(capacity, cols) {
+  const out = [];
+  for (let r = 0; r * cols < capacity; r++) {
+    const n = Math.min(cols, capacity - r * cols);
+    Array.from({ length: n }, (_, c) => c)
+      .sort((a, b) => Math.abs(a - (n - 1) / 2) - Math.abs(b - (n - 1) / 2) || a - b)
+      .forEach(c => out.push(rowLetter(r) + (c + 1)));
+  }
+  return out;
+}

@@ -75,7 +75,7 @@ export const defaultSettings = {
   email: JSON.parse(JSON.stringify(DEFAULT_EMAIL)), // editable in Admin > Emails
   registration: {
     allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], // only these email domains can register (one registration per email)
-    seatSelection: true, // visitors can pick a seat on the 3D map (otherwise one is assigned automatically)
+    showSeatMap: true, // show the animated 3D seating plan on the registration section (seats are always assigned automatically; admins can move people)
     seatCols: 10 // seats per row on the seat map
   },
   sections: { why: true, objectives: true, panel: true, workshop: true, rules: true, schedule: true, team: true, info: true },

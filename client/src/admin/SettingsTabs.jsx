@@ -165,7 +165,7 @@ export function ContentTab({ draft, setDraft, flash, onAuthError }) {
       </Card>
       <Card title="Registration rules" hint="Who can register and how seats work. Each email can register once, confirmed with an emailed code.">
         <Text label="Allowed email domains" hint="Separate with commas" value={draft.registration.allowedDomains.join(', ')} max={200} onChange={v => setDraft(d => setPath(d, ['registration', 'allowedDomains'], v.split(',').map(x => x.trim()).filter(Boolean)))} />
-        <Toggle label="Let people pick a seat" hint="Shows the 3D cinema seat map. Off = seats are assigned automatically." checked={draft.registration.seatSelection} onChange={v => setDraft(d => setPath(d, ['registration', 'seatSelection'], v))} />
+        <Toggle label="Show the 3D seating plan" hint="Visitors cannot pick seats: they are assigned automatically (front row first) and admins can move people in the Seats tab. This only shows or hides the plan." checked={draft.registration.showSeatMap} onChange={v => setDraft(d => setPath(d, ['registration', 'showSeatMap'], v))} />
         <Range label="Seats per row" value={draft.registration.seatCols} min={4} max={20} onChange={v => setDraft(d => setPath(d, ['registration', 'seatCols'], v))} />
       </Card>
       <Card title="Event details" hint="Shown in the hero, the ticket and the calendar file.">

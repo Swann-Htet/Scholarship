@@ -8,6 +8,7 @@ import { getSettings, saveSettings } from '../settings.js';
 import { hashPassword, verifyPassword } from '../password.js';
 import { hit, blockIp, blockBody, rejectBlocked, sha256, clientIp, wrap } from '../security.js';
 import { checkIn } from '../checkin.js';
+import { seatLabels, seatOrder } from '../../shared/seats.js';
 
 const router = Router();
 const MIN = 60 * 1000;
@@ -77,7 +78,48 @@ router.get('/registrations.csv', wrap(async (_req, res) => {
   res.send('﻿' + [head.map(csvCell).join(','), ...body].join('\r\n'));
 }));
 
+// give a person a seat, move them, or swap with whoever sits there (admin seat editor)
+async function setSeat(reg, targetRaw) {
+  const settings = await getSettings(), labels = seatLabels(settings.event.capacity, settings.registration.seatCols), target = String(targetRaw || '').toUpperCase().trim();
+  if (reg.status !== 'confirmed') return { error: 'Only confirmed registrations have seats.' };
+  if (!target) { await Registration.updateOne({ _id: reg._id }, { $unset: { seat: 1 } }); return { ok: true }; }
+  if (!labels.includes(target)) return { error: 'That seat does not exist.' };
+  if (reg.seat === target) return { ok: true };
+  const other = await Registration.findOne({ seat: target, _id: { $ne: reg._id } });
+  if (!other) { await Registration.updateOne({ _id: reg._id }, { seat: target }); return { ok: true }; }
+  const old = reg.seat; // swap: free the unique seat names first so neither update collides
+  await Registration.updateOne({ _id: reg._id }, { $unset: { seat: 1 } });
+  try {
+    await Registration.updateOne({ _id: other._id }, old ? { seat: old } : { $unset: { seat: 1 } });
+    await Registration.updateOne({ _id: reg._id }, { seat: target });
+  } catch (e) { if (old) await Registration.updateOne({ _id: reg._id }, { seat: old }).catch(() => {}); throw e; }
+  return { ok: true, swappedWith: other.name };
+}
+
+router.get('/seatmap', wrap(async (_req, res) => {
+  const s = await getSettings();
+  const confirmed = await Registration.find({ status: 'confirmed' }).sort({ createdAt: 1 }).select('name email seat checkedIn ticketCode').lean();
+  const waitlist = await Registration.countDocuments({ status: 'waitlist' });
+  res.json({ capacity: s.event.capacity, cols: s.registration.seatCols, seated: confirmed.filter(r => r.seat), unseated: confirmed.filter(r => !r.seat), waitlist });
+}));
+
+router.post('/seatmap/auto-assign', wrap(async (_req, res) => {
+  const s = await getSettings(), order = seatOrder(s.event.capacity, s.registration.seatCols);
+  const taken = new Set(await Registration.distinct('seat', { seat: { $exists: true, $ne: null } }));
+  const people = await Registration.find({ status: 'confirmed', seat: { $exists: false } }).sort({ createdAt: 1 }).select('_id');
+  let n = 0;
+  for (const p of people) { const seat = order.find(l => !taken.has(l)); if (!seat) break; taken.add(seat); await Registration.updateOne({ _id: p._id }, { seat }); n++; }
+  res.json({ ok: true, assigned: n, left: people.length - n });
+}));
+
 router.patch('/registrations/:id', wrap(async (req, res) => {
+  if (typeof req.body?.seat === 'string') {
+    const reg = await Registration.findById(req.params.id);
+    if (!reg) return res.status(404).json({ error: 'Not found.' });
+    const r = await setSeat(reg, req.body.seat);
+    if (r.error) return res.status(400).json({ error: r.error });
+    return res.json({ ...(await Registration.findById(reg._id).select('-lineIdKey -emailKey -__v').lean()), swappedWith: r.swappedWith });
+  }
   const set = {}, unset = {};
   if (['confirmed', 'waitlist'].includes(req.body?.status)) { set.status = req.body.status; if (req.body.status === 'waitlist') unset.seat = 1; }
   if (typeof req.body?.checkedIn === 'boolean') { set.checkedIn = req.body.checkedIn; set.checkedInAt = req.body.checkedIn ? new Date() : null; set.checkedInBy = req.admin.email; }

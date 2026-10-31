@@ -17,7 +17,7 @@ api/index.js   Vercel entry point for the API
 vercel.json    Vercel configuration
 ```
 
-The registration form asks only for **name, MFU email and LINE ID**, confirms the email with a 6-digit code, and lets people pick a seat on a 3D cinema seat map. Everything you see on the website (colours, fonts, animations, text, sections) can be changed from the admin panel without touching code.
+The registration form asks only for **name, MFU email and LINE ID**, confirms the email with a 6-digit code, and shows an animated 3D cinema seating plan. Seats are assigned automatically and admins can move people on the same 3D plan. Everything you see on the website (colours, fonts, animations, text, sections) can be changed from the admin panel without touching code.
 
 ---
 
@@ -125,12 +125,12 @@ Gmail allows about 500 emails per day, which is plenty. Any other SMTP service w
 
 ## How registration works
 
-1. The visitor picks a seat on the 3D map (optional), enters name, **MFU email** and LINE ID.
+1. The visitor enters name, **MFU email** and LINE ID. They cannot choose a seat: one is assigned automatically.
 2. Only the email domains listed in **Admin → Content → Registration rules** are accepted (default `@lamduan.mfu.ac.th` and `@mfu.ac.th`).
 3. A 6-digit code is emailed. It expires in 10 minutes, allows 5 tries and can be re-sent after 45 seconds.
-4. After the correct code the ticket (QR code + seat) is created and a copy is emailed.
+4. After the correct code the ticket (QR code + seat) is created and a copy is emailed. Seats are handed out front row first, from the middle of each row outwards.
 5. **One registration per mailbox**: `name+tag@lamduan.mfu.ac.th` counts as `name@lamduan.mfu.ac.th`. LINE IDs are unique too.
-6. The chosen seat is held while waiting for the code. If the event is full, people join the waitlist (no seat).
+6. If the event is full, people join the waitlist (no seat).
 
 ## Bot and scam protection (freeze for 15 minutes)
 
@@ -175,7 +175,10 @@ The **owner** is the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your environment. In 
 
 ## Seats
 
-The seat map is drawn with three.js (loaded only when the register section comes into view). The number of seats is the capacity you set in Admin → Content; **Seats per row** changes the shape. On laptops drag to look around; on phones tap a seat. Seats are labelled like a cinema (A1, B7...).
+- **Visitors** see an animated 3D seating plan (seats rise in row by row, people appear on taken seats). They cannot pick a seat. After registering, their own seat gets a glowing beam and the camera flies to it. The saved ticket refreshes its seat from the server, so if an admin moves them, they see the new seat.
+- **Admins** use **Admin → Seats**: click a person (on the map or in the lists), then click a free seat to move them, or another person's seat to swap. **Seat everyone** assigns all confirmed people without a seat. Waitlist people have no seat; moving someone to the waitlist frees their seat.
+- The number of seats is the capacity (Admin → Content → Event details); **Seats per row** changes the shape. You can hide the plan with **Show the 3D seating plan** (Admin → Content → Registration rules).
+- Drawn with three.js, loaded only when the section comes into view. On laptops drag to look around; on phones the plan sways gently. Reduced-motion users get a calm version.
 
 ---
 
@@ -185,6 +188,7 @@ The seat map is drawn with three.js (loaded only when the register section comes
 |---|---|
 | Dashboard | Totals, capacity bar, registrations per day, latest sign-ups |
 | Registrations | Search, seat, switch confirmed ⇄ waitlist, tick check-in, delete, **copy emails**, **export CSV** |
+| Seats | 3D seat editor: move or swap people, seat everyone |
 | Check-in | QR scanner and volunteer check-in links |
 | Admins | Add / remove admins, reset passwords |
 | Security | See and unfreeze frozen visitors |

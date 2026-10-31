@@ -124,7 +124,7 @@ function Frozen({ info }) {
 }
 
 export default function Register({ settings }) {
-  const e = settings.event, rg = settings.registration || { allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], seatSelection: true, seatCols: 10 };
+  const e = settings.event, rg = settings.registration || { allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], showSeatMap: true, seatCols: 10 };
   const [vals, setVals] = useState({ name: '', email: '', lineId: '' });
   const [errs, setErrs] = useState({});
   const [touched, setTouched] = useState({});
@@ -134,7 +134,6 @@ export default function Register({ settings }) {
   const [msg, setMsg] = useState('');
   const [cap, setCap] = useState(null);
   const [seatInfo, setSeatInfo] = useState(null); // { capacity, cols, taken[], selectable }
-  const [seat, setSeat] = useState('');
   const [phase, setPhase] = useState('form'); // form | otp
   const [otp, setOtp] = useState('');
   const [sent, setSent] = useState(null); // { emailMasked, expiresMinutes, devCode }
@@ -149,7 +148,7 @@ export default function Register({ settings }) {
     return false;
   };
 
-  const loadSeats = () => api.seats().then(s => { setSeatInfo(s); setSeat(cur => (cur && s.taken.includes(cur) ? '' : cur)); }).catch(() => {});
+  const loadSeats = () => api.seats().then(setSeatInfo).catch(() => {});
   useEffect(() => {
     let live = true;
     api.capacity().then(c => live && setCap(c)).catch(() => live && setCap({ confirmed: 0, capacity: e.capacity, failed: true }));
@@ -158,6 +157,15 @@ export default function Register({ settings }) {
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [e.capacity]);
+
+  useEffect(() => {
+    if (!ticket) return undefined;
+    let live = true;
+    api.ticket(ticket.code).then(r => { if (live && (r.seat !== ticket.seat || r.status !== ticket.status)) { const t = { ...ticket, seat: r.seat, status: r.status }; setTicket(t); try { localStorage.setItem(TICKET_KEY, JSON.stringify(t)); } catch { /* ignore */ } } })
+      .catch(err => { if (live && err.status === 404) { try { localStorage.removeItem(TICKET_KEY); } catch { /* ignore */ } setTicket(null); } });
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.code]);
 
   useEffect(() => { if (resend <= 0) return undefined; const id = setTimeout(() => setResend(r => r - 1), 1000); return () => clearTimeout(id); }, [resend]);
 
@@ -176,12 +184,11 @@ export default function Register({ settings }) {
     if (bad.length) { shakeIt(bad[0]); sfx('invalid'); document.getElementById(bad[0])?.focus(); return; }
     setBusy(true);
     try {
-      const r = await api.registerStart({ ...vals, seat: full ? '' : seat, website: hp.current?.value || '', token: token.current });
+      const r = await api.registerStart({ ...vals, website: hp.current?.value || '', token: token.current });
       setSent(r); setPhase('otp'); setOtp(''); setResend(r.resendIn || 45); sfx('success');
     } catch (err) {
       if (!handleErr(err)) {
         setMsg(err.message); sfx('error'); shakeIt('btn');
-        if (err.data?.seatTaken) { setSeat(''); loadSeats(); }
         if (err.data?.reload) api.formToken().then(t => { token.current = t.token; }).catch(() => {});
         if (err.data?.retryAfter) setResend(err.data.retryAfter);
       }
@@ -204,9 +211,9 @@ export default function Register({ settings }) {
     } finally { setBusy(false); setDone(false); }
   };
 
-  const reset = () => { try { localStorage.removeItem(TICKET_KEY); } catch { /* ignore */ } setTicket(null); setVals({ name: '', email: '', lineId: '' }); setErrs({}); setTouched({}); setPhase('form'); setSeat(''); loadSeats(); api.formToken().then(t => { token.current = t.token; }).catch(() => {}); };
+  const reset = () => { try { localStorage.removeItem(TICKET_KEY); } catch { /* ignore */ } setTicket(null); setVals({ name: '', email: '', lineId: '' }); setErrs({}); setTouched({}); setPhase('form'); loadSeats(); api.formToken().then(t => { token.current = t.token; }).catch(() => {}); };
 
-  const showSeats = rg.seatSelection && seatInfo && seatInfo.selectable !== false && !full;
+  const showPlan = rg.showSeatMap !== false && !!seatInfo;
 
   return (
     <section className="sec" id="register"><Doodles id="register" />
@@ -229,16 +236,16 @@ export default function Register({ settings }) {
               )}
             </div>
 
-            {phase === 'form' && showSeats && (
+            {showPlan && (
               <div className="card seat-card" data-reveal>
                 <div className="seat-head">
-                  <div><h3>Pick your seat</h3><p className="hint">Tap a free seat. Drag to look around. Skip it and we will assign one.</p></div>
+                  <div><h3>Seating plan</h3><p className="hint">Seats are assigned automatically when you register, front row first. After you register, your seat lights up here. Drag to look around.</p></div>
                   <div className="seat-legend" aria-hidden="true"><span><i className="free" />Free</span><span><i className="taken" />Taken</span><span><i className="mine" />Yours</span></div>
                 </div>
                 <Suspense fallback={<div className="sk seat-skeleton" />}>
-                  <SeatMap3D capacity={seatInfo.capacity} cols={seatInfo.cols} taken={seatInfo.taken} selected={seat} onSelect={s => { setSeat(s); sfx(s ? 'valid' : 'click'); }} />
+                  <SeatMap3D capacity={seatInfo.capacity} cols={seatInfo.cols} taken={seatInfo.taken} />
                 </Suspense>
-                <p className="seat-picked">{seat ? <>Your seat: <b>{seat}</b> <button type="button" onClick={() => setSeat('')}>Clear</button></> : 'No seat picked yet'}</p>
+                <p className="seat-picked">{seatInfo.taken.length} of {seatInfo.capacity} seats taken</p>
               </div>
             )}
 
@@ -285,6 +292,14 @@ export default function Register({ settings }) {
           </>
         )}
         {ticket && <Ticket ticket={ticket} settings={settings} onReset={reset} />}
+        {ticket && ticket.seat && showPlan && (
+          <div className="card seat-card" style={{ marginTop: 22 }}>
+            <div className="seat-head"><div><h3>Your seat: {ticket.seat}</h3><p className="hint">Look for the glowing beam. If the organisers move your seat, this updates.</p></div></div>
+            <Suspense fallback={<div className="sk seat-skeleton" />}>
+              <SeatMap3D capacity={seatInfo.capacity} cols={seatInfo.cols} taken={seatInfo.taken} mine={ticket.seat} />
+            </Suspense>
+          </div>
+        )}
       </div>
     </section>
   );
