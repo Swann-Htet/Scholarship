@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import { Registration, Pending, Block, Admin, CheckinLink } from '../models.js';
+import { Registration, Pending, Block, Admin, CheckinLink, Asset } from '../models.js';
+import { sendTest } from '../mailer.js';
+import { stripUnsafe } from '../../shared/emailTemplate.js';
 import { getSettings, saveSettings } from '../settings.js';
 import { hashPassword, verifyPassword } from '../password.js';
 import { hit, blockIp, blockBody, rejectBlocked, sha256, clientIp, wrap } from '../security.js';
@@ -95,6 +97,30 @@ router.delete('/registrations/:id', wrap(async (req, res) => {
 // ---------------- settings ----------------
 router.get('/settings', wrap(async (_req, res) => res.json(await getSettings())));
 router.put('/settings', wrap(async (req, res) => res.json(await saveSettings(req.body))));
+
+// ---------------- uploaded images (logo, people photos) ----------------
+const MAGIC = { 'image/png': b => b.length > 8 && b.readUInt32BE(0) === 0x89504e47, 'image/jpeg': b => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff, 'image/webp': b => b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP' };
+router.post('/assets', wrap(async (req, res) => {
+  const mime = String(req.body?.mime || ''), b64 = String(req.body?.data || '').replace(/^data:[^,]+,/, '');
+  if (!MAGIC[mime]) return res.status(400).json({ error: 'Only PNG, JPEG or WebP images are allowed.' });
+  const buf = Buffer.from(b64, 'base64');
+  if (!buf.length || buf.length > 700 * 1024) return res.status(400).json({ error: 'Image is too large (max 700 KB). Use a smaller image.' });
+  if (!MAGIC[mime](buf)) return res.status(400).json({ error: 'That file is not a real image of that type.' });
+  if (await hit('upload:' + req.admin.email, 10 * MIN) > 40) return res.status(429).json({ error: 'Too many uploads. Wait a few minutes.' });
+  const a = await Asset.create({ mime, name: String(req.body?.name || 'image').slice(0, 80), size: buf.length, data: buf, createdBy: req.admin.email });
+  res.status(201).json({ id: a.id });
+}));
+
+// ---------------- email templates ----------------
+router.post('/email/test', wrap(async (req, res) => {
+  const to = String(req.body?.to || '').trim().toLowerCase(), which = req.body?.which === 'ticket' ? 'ticket' : 'otp';
+  if (!EMAIL.test(to)) return res.status(400).json({ error: 'Enter a valid email address to send the test to.' });
+  if (await hit('mailtest:' + req.admin.email, 60 * MIN) > 15) return res.status(429).json({ error: 'Too many test emails. Try again later.' });
+  const settings = await getSettings();
+  const subject = String(req.body?.subject || settings.email[which].subject).slice(0, 200), html = stripUnsafe(String(req.body?.html || settings.email[which].html).slice(0, 30000));
+  try { const sent = await sendTest({ to, which, subject, html, settings, siteUrl: process.env.SITE_URL || `${req.protocol}://${req.get('host')}` }); res.json({ ok: true, subject: sent }); }
+  catch (e) { res.status(e.code === 'NO_MAIL' ? 503 : 502).json({ error: e.code === 'NO_MAIL' ? 'Email is not set up on the server yet (SMTP settings).' : `The email service refused it: ${e.message}` }); }
+}));
 
 // ---------------- admins ----------------
 router.get('/admins', wrap(async (req, res) => {

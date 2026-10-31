@@ -50,6 +50,9 @@ const checkinLinkSchema = new Schema({
   uses: { type: Number, default: 0 }, lastUsedAt: Date, createdBy: String
 }, { timestamps: true });
 
+// Uploaded images (MFU logo, people photos). Small files stored directly in MongoDB and served by /api/asset/:id.
+const assetSchema = new Schema({ mime: String, name: String, size: Number, data: Buffer, createdBy: String }, { timestamps: true });
+
 // One document holds all editable website settings (key: "site").
 const settingSchema = new Schema({ key: { type: String, unique: true, required: true }, data: { type: Schema.Types.Mixed, default: {} } }, { timestamps: true });
 
@@ -60,4 +63,5 @@ export const Block = m('Block', blockSchema);
 export const Hit = m('Hit', hitSchema);
 export const Admin = m('Admin', adminSchema);
 export const CheckinLink = m('CheckinLink', checkinLinkSchema);
+export const Asset = m('Asset', assetSchema);
 export const Setting = m('Setting', settingSchema);

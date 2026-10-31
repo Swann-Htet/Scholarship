@@ -1,5 +1,6 @@
 import { defaultSettings, FONT_OPTIONS, SECTION_KEYS } from '../shared/defaultSettings.js';
-import { Setting } from './models.js';
+import { Setting, Asset } from './models.js';
+import { stripUnsafe } from '../shared/emailTemplate.js';
 
 const clone = o => JSON.parse(JSON.stringify(o));
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -28,11 +29,17 @@ const date = (v, fb) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) 
 const time = (v, fb) => (typeof v === 'string' && /^\d{2}:\d{2}$/.test(v) ? v : fb);
 const tuples = (v, n, fb, max = 30, len = 400) => (Array.isArray(v) ? v.slice(0, max).map(r => Array.from({ length: n }, (_, i) => str(Array.isArray(r) ? r[i] : '', len, ''))) : fb);
 const domains = (v, fb) => (Array.isArray(v) ? v.map(x => String(x).trim().toLowerCase().replace(/^@/, '')).filter(x => /^[a-z0-9.-]{3,60}$/.test(x) && x.includes('.')).slice(0, 10) : fb);
+const oid = (v, fb = '') => (typeof v === 'string' && /^[a-f0-9]{24}$/.test(v) ? v : fb);
+const tpl = (t, fb) => ({
+  subject: str(t?.subject, 200, '').trim() ? str(t.subject, 200, fb.subject) : fb.subject,
+  html: str(t?.html, 30000, '').trim() ? stripUnsafe(str(t.html, 30000, fb.html)) : fb.html
+});
+const GROUPS = ['organizer', 'contributor', 'staff'];
 const ICONS = ['i-lang', 'i-culture', 'i-incl', 'i-prac'];
 
 export function sanitize(input) {
   const d = defaultSettings, d0 = defaultSettings, i = isObj(input) ? input : {};
-  const ev = isObj(i.event) ? i.event : {}, he = isObj(i.hero) ? i.hero : {}, th = isObj(i.theme) ? i.theme : {}, an = isObj(i.animation) ? i.animation : {}, se = isObj(i.sections) ? i.sections : {}, rg = isObj(i.registration) ? i.registration : {}, co = isObj(i.content) ? i.content : {};
+  const ev = isObj(i.event) ? i.event : {}, he = isObj(i.hero) ? i.hero : {}, th = isObj(i.theme) ? i.theme : {}, an = isObj(i.animation) ? i.animation : {}, se = isObj(i.sections) ? i.sections : {}, rg = isObj(i.registration) ? i.registration : {}, br = isObj(i.branding) ? i.branding : {}, em = isObj(i.email) ? i.email : {}, co = isObj(i.content) ? i.content : {};
   const displayNames = FONT_OPTIONS.display.map(f => f.name), bodyNames = FONT_OPTIONS.body.map(f => f.name);
   return {
     event: {
@@ -52,6 +59,8 @@ export function sanitize(input) {
       people: bool(an.people, d.animation.people), marquee: bool(an.marquee, d.animation.marquee), reveal: bool(an.reveal, d.animation.reveal),
       pinnedWorkshop: bool(an.pinnedWorkshop, d.animation.pinnedWorkshop), sound: bool(an.sound, d.animation.sound), speed: num(an.speed, 0.25, 3, d.animation.speed)
     },
+    branding: { logoId: oid(br.logoId), logoAlt: str(br.logoAlt, 100, d0.branding.logoAlt) },
+    email: { otp: tpl(em.otp, d0.email.otp), ticket: tpl(em.ticket, d0.email.ticket) },
     registration: {
       allowedDomains: (() => { const d = domains(rg.allowedDomains, d0.registration.allowedDomains); return d.length ? d : d0.registration.allowedDomains; })(),
       seatSelection: bool(rg.seatSelection, d0.registration.seatSelection),
@@ -67,7 +76,7 @@ export function sanitize(input) {
       stages: Array.isArray(co.stages) ? co.stages.slice(0, 4).map((p, n) => ({ n: str(p?.n, 4, '0' + (n + 1)), t: str(p?.t, 80, ''), d: str(p?.d, 400, '') })) : d.content.stages,
       rules: tuples(co.rules, 2, d.content.rules, 8),
       schedule: tuples(co.schedule, 3, d.content.schedule, 20),
-      team: tuples(co.team, 2, d.content.team, 16),
+      people: Array.isArray(co.people) ? co.people.slice(0, 60).map(p => ({ name: str(p?.name, 80, '').trim(), role: str(p?.role, 80, '').trim(), group: pick(p?.group, GROUPS, 'staff'), photo: oid(p?.photo) })).filter(p => p.name) : d.content.people,
       faq: tuples(co.faq, 2, d.content.faq, 20, 800)
     }
   };
@@ -76,5 +85,8 @@ export function sanitize(input) {
 export async function saveSettings(input) {
   const data = sanitize(input);
   await Setting.findOneAndUpdate({ key: 'site' }, { key: 'site', data }, { upsert: true, new: true });
+  // delete uploaded images that nothing uses any more (keep anything uploaded in the last hour, it may be about to be used)
+  const used = [data.branding.logoId, ...data.content.people.map(p => p.photo)].filter(Boolean);
+  await Asset.deleteMany({ _id: { $nin: used }, createdAt: { $lt: new Date(Date.now() - 3600e3) } });
   return data;
 }

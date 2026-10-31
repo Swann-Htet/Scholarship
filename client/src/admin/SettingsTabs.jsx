@@ -1,6 +1,7 @@
 import React from 'react';
 import { FONT_OPTIONS, SECTION_KEYS } from '../../../shared/defaultSettings.js';
 import { ensureFont } from '../lib/theme.js';
+import ImageUpload from './ImageUpload.jsx';
 
 const clone = o => JSON.parse(JSON.stringify(o));
 const setPath = (draft, path, val) => { const n = clone(draft); let o = n; path.slice(0, -1).forEach(k => { o = o[k]; }); o[path[path.length - 1]] = val; return n; };
@@ -62,13 +63,46 @@ function ListEditor({ title, hint, rows, onChange, cols, blank, max = 30, min = 
   );
 }
 
+/* ---------- people: organisers, contributors and staff ---------- */
+const GROUP_NAMES = { organizer: 'Organizer', contributor: 'Contributor', staff: 'Staff' };
+function PeopleEditor({ rows, onChange, flash, onAuthError }) {
+  const upd = (i, patch) => onChange(rows.map((r, n) => (n === i ? { ...r, ...patch } : r)));
+  const move = (i, d) => { const n = [...rows], j = i + d; if (j < 0 || j >= n.length) return; [n[i], n[j]] = [n[j], n[i]]; onChange(n); };
+  return (
+    <Card title="People" hint="Organizers, contributors and staff shown on the website. People without a name are ignored. Photos are cropped square.">
+      <div className="a-list-editor">
+        {rows.map((r, i) => (
+          <div className="le-row person-row" key={i}>
+            <ImageUpload kind="photo" label="Add photo" size={64} value={r.photo} flash={flash} onAuthError={onAuthError} onChange={id => upd(i, { photo: id })} />
+            <div className="le-cols" style={{ gridTemplateColumns: '1.2fr 1.2fr .8fr' }}>
+              <label><small>Name</small><input value={r.name} maxLength={80} onChange={e => upd(i, { name: e.target.value })} /></label>
+              <label><small>Role</small><input value={r.role} maxLength={80} onChange={e => upd(i, { role: e.target.value })} /></label>
+              <label><small>Group</small><select value={r.group} onChange={e => upd(i, { group: e.target.value })}>{Object.entries(GROUP_NAMES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+            </div>
+            <div className="le-tools">
+              <button type="button" className="a-icon" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
+              <button type="button" className="a-icon" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move down">↓</button>
+              <button type="button" className="a-icon danger" onClick={() => onChange(rows.filter((_, n) => n !== i))} aria-label="Remove">✕</button>
+            </div>
+          </div>
+        ))}
+        {rows.length < 60 && <button type="button" className="a-btn add" onClick={() => onChange([...rows, { name: '', role: '', group: 'staff', photo: '' }])}>+ Add person</button>}
+      </div>
+    </Card>
+  );
+}
+
 /* ---------- tabs ---------- */
-export function DesignTab({ draft, setDraft }) {
+export function DesignTab({ draft, setDraft, flash, onAuthError }) {
   const t = draft.theme, up = (k, v) => setDraft(d => setPath(d, ['theme', k], v));
   const fontPick = (k, list, name) => { ensureFont(list.find(f => f.name === name)); up(k, name); };
   FONT_OPTIONS.display.concat(FONT_OPTIONS.body).forEach(f => { if (f.name === t.displayFont || f.name === t.bodyFont) ensureFont(f); });
   return (
     <>
+      <Card title="Logo" hint="Shown in the top bar, the footer and at the top of every email. Use the official MFU logo file (PNG with a transparent background looks best).">
+        <ImageUpload kind="logo" label="Upload logo" value={draft.branding.logoId} flash={flash} onAuthError={onAuthError} onChange={id => setDraft(d => setPath(d, ['branding', 'logoId'], id))} />
+        <Text label="Logo description (for screen readers)" value={draft.branding.logoAlt} max={100} onChange={v => setDraft(d => setPath(d, ['branding', 'logoAlt'], v))} />
+      </Card>
       <Card title="Colours" hint="Accent colours drive the buttons, shapes and the animated people.">
         <Segmented label="Default theme" hint="Visitors can still switch with the sun/moon button." value={t.mode} options={[['light', 'Light'], ['dark', 'Dark'], ['auto', 'Match device']]} onChange={v => up('mode', v)} />
         <Color label="Accent 1" value={t.accent1} onChange={v => up('accent1', v)} />
@@ -118,9 +152,9 @@ export function AnimationTab({ draft, setDraft }) {
   );
 }
 
-const SECTION_LABELS = { why: 'Why this matters', objectives: 'Objectives', panel: 'Panel discussion', workshop: 'Workshop', rules: 'Five rules', schedule: 'Schedule', team: 'Team', info: 'Info and FAQ' };
+const SECTION_LABELS = { why: 'Why this matters', objectives: 'Objectives', panel: 'Panel discussion', workshop: 'Workshop', rules: 'Five rules', schedule: 'Schedule', team: 'Organizers, contributors and staff', info: 'Info and FAQ' };
 
-export function ContentTab({ draft, setDraft }) {
+export function ContentTab({ draft, setDraft, flash, onAuthError }) {
   const e = draft.event, h = draft.hero, c = draft.content;
   const ev = (k, v) => setDraft(d => setPath(d, ['event', k], v)), hr = (k, v) => setDraft(d => setPath(d, ['hero', k], v)), ct = (k, v) => setDraft(d => setPath(d, ['content', k], v));
   const ICONS = ['i-lang', 'i-culture', 'i-incl', 'i-prac'];
@@ -164,7 +198,7 @@ export function ContentTab({ draft, setDraft }) {
         cols={[{ key: 'n', label: 'No.', w: '.4fr' }, { key: 't', label: 'Title', w: '1fr' }, { key: 'd', label: 'Text', area: true, w: '2fr' }]} />
       <ListEditor title="Five rules" rows={c.rules} onChange={v => ct('rules', v)} max={5} min={5} blank={['Rule', 'Text']} cols={[{ i: 0, label: 'Rule', w: '1fr' }, { i: 1, label: 'Text', area: true, w: '2fr' }]} />
       <ListEditor title="Schedule" rows={c.schedule} onChange={v => ct('schedule', v)} max={20} blank={['00:00', 'Title', 'Text']} cols={[{ i: 0, label: 'Time', w: '.5fr' }, { i: 1, label: 'Title', w: '1fr' }, { i: 2, label: 'Text', area: true, w: '1.6fr' }]} />
-      <ListEditor title="Team" rows={c.team} onChange={v => ct('team', v)} max={16} blank={['Role', 'What they do']} cols={[{ i: 0, label: 'Role or name', w: '1fr' }, { i: 1, label: 'Description', w: '1.4fr' }]} />
+      <PeopleEditor rows={c.people} onChange={v => ct('people', v)} flash={flash} onAuthError={onAuthError} />
       <ListEditor title="FAQ" rows={c.faq} onChange={v => ct('faq', v)} max={20} blank={['Question?', 'Answer']} cols={[{ i: 0, label: 'Question', w: '1fr' }, { i: 1, label: 'Answer', area: true, w: '1.6fr' }]} />
     </>
   );

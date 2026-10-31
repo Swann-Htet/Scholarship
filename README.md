@@ -143,6 +143,25 @@ A visitor's IP address is **frozen for 15 minutes** and sees a warning when they
 
 Wrong email domains only collect warnings (many students share one campus Wi-Fi address, so one freeze would hit everybody). The warning says the visitor's **IP address, browser details and attempt were logged**. The site does not collect GPS location, and the message does not claim to. Admins can see and **unfreeze** visitors in **Admin → Security**.
 
+## Email design (Admin → Emails)
+
+Both emails are normal HTML that you can edit without code:
+
+- **Verification code email** (sent with the 6-digit code) and **Ticket email** (sent with the QR code and seat).
+- Edit the **subject** and the **HTML**. Click a placeholder chip such as `{{name}}`, `{{code}}`, `{{seat}}`, `{{qr}}` or `{{logo}}` to insert it at the cursor. Values are inserted safely (escaped), so a visitor's name can never inject HTML.
+- The live **preview** updates as you type, with a Desktop / Phone switch.
+- **Send test email** sends the draft (even before you save) to any address, with sample data.
+- **Reset to default design** restores the original template. Scripts, forms and `javascript:` links are removed automatically.
+- The logo and the ticket QR code are attached **inside** the email, so they show without the reader pressing "load images".
+
+Tip: email apps are fussy. Keep layouts table-based with inline `style="..."` (like the default), and avoid web fonts.
+
+## Logo and people
+
+- **Admin → Design → Logo**: upload the official MFU logo (PNG, JPG or WebP; a PNG with a transparent background looks best). It appears in the top bar, the footer and every email. I cannot download the MFU logo for you, so you upload it here. It is resized in your browser first, so any normal logo file works.
+- **Admin → Content → People**: add **organizers, contributors and staff** with a name, role, group and an optional photo. They appear on the website in three groups. Use the arrows to reorder. People without a name are ignored.
+- Uploaded images are stored in MongoDB and served from `/api/asset/<id>`. Images that are no longer used are cleaned up automatically after an hour.
+
 ## Check-in with QR codes
 
 - **Admin → Check-in** has a camera scanner. Point it at the QR on a ticket (or type the code).
@@ -169,9 +188,10 @@ The seat map is drawn with three.js (loaded only when the register section comes
 | Check-in | QR scanner and volunteer check-in links |
 | Admins | Add / remove admins, reset passwords |
 | Security | See and unfreeze frozen visitors |
-| Design | Light/dark default, two accent colours, backgrounds, heading and body fonts, corner roundness |
+| Emails | Edit the verification and ticket emails (HTML), preview, send a test |
+| Design | Logo upload, light/dark default, accent colours, heading and body fonts, corner roundness |
 | Animation | Speed, animated people, floating shapes, background, scroll reveal, pinned workshop, sound |
-| Content | Show/hide sections, event details and capacity, hero text, greetings (with a font per language), objectives, panel, workshop stages, rules, schedule, team, FAQ |
+| Content | Show/hide sections, event details and capacity, hero text, greetings (with a font per language), objectives, panel, workshop stages, rules, schedule, **people (organizers, contributors, staff)**, FAQ |
 
 Changes go live when you press **Save changes**. **Reset to defaults** loads the built-in content (it is not saved until you press Save).
 

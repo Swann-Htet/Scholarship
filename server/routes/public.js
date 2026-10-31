@@ -6,6 +6,7 @@ import { getSettings } from '../settings.js';
 import { seatLabels } from '../../shared/seats.js';
 import { hit, blockIp, strike, rejectBlocked, blockBody, sha256, secret, clientIp, wrap, LOCK_MINUTES } from '../security.js';
 import { sendOtp, sendTicket, devOtp } from '../mailer.js';
+import { Asset } from '../models.js';
 import { checkIn } from '../checkin.js';
 
 const router = Router();
@@ -15,6 +16,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const LINE = /^[A-Za-z0-9._-]{2,40}$/;
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const newCode = () => 'GDC-' + Array.from(crypto.randomBytes(6), b => ALPHABET[b % ALPHABET.length]).join('');
+const siteUrl = req => process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
 const fail = (res, status, error, extra = {}) => res.status(status).json({ ok: false, error, ...extra });
 
 // "aye+test@lamduan.mfu.ac.th" and "aye@lamduan.mfu.ac.th" are the same mailbox: only one registration per mailbox.
@@ -28,7 +30,19 @@ async function takenSeats(exceptEmail) {
 }
 
 // ---------------- read-only public data ----------------
-router.get('/settings', wrap(async (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(await getSettings()); }));
+router.get('/settings', wrap(async (_req, res) => {
+  const { email, ...publicSettings } = await getSettings(); // email templates are admin-only
+  res.set('Cache-Control', 'no-store'); res.json(publicSettings);
+}));
+
+// uploaded images (logo, people photos)
+router.get('/asset/:id', wrap(async (req, res) => {
+  if (!/^[a-f0-9]{24}$/.test(req.params.id)) return res.status(404).end();
+  const a = await Asset.findById(req.params.id).lean();
+  if (!a) return res.status(404).end();
+  res.set({ 'Content-Type': a.mime, 'Cache-Control': 'public, max-age=31536000, immutable', 'Cross-Origin-Resource-Policy': 'cross-origin', 'Content-Security-Policy': "default-src 'none'; sandbox" });
+  res.send(Buffer.from(a.data.buffer || a.data));
+}));
 
 router.get('/capacity', wrap(async (_req, res) => {
   const [settings, confirmed] = await Promise.all([getSettings(), Registration.countDocuments({ status: 'confirmed' })]);
@@ -97,7 +111,7 @@ router.post('/register/start', rejectBlocked, wrap(async (req, res) => {
 
   const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
   await Pending.findOneAndUpdate({ email }, { email, emailKey, name, lineId, seat, otpHash: otpHash(code, emailKey), attempts: 0, lastSentAt: new Date(), ip: clientIp(req), userAgent: String(req.headers['user-agent'] || '').slice(0, 200), expiresAt: new Date(Date.now() + OTP_MINUTES * MIN) }, { upsert: true });
-  try { await sendOtp(email, name, code, OTP_MINUTES, settings.event.title); }
+  try { await sendOtp({ to: email, name, code, minutes: OTP_MINUTES, settings, siteUrl: siteUrl(req) }); }
   catch (e) {
     await Pending.deleteOne({ email });
     console.error('Email failed:', e.message);
@@ -141,7 +155,7 @@ router.post('/register/verify', rejectBlocked, wrap(async (req, res) => {
       const doc = await Registration.create({ name: p.name, email, emailKey: p.emailKey, emailVerified: true, lineId: p.lineId, lineIdKey, status, ticketCode: newCode(), ip: clientIp(req), ...(seat ? { seat } : {}) });
       await Pending.deleteOne({ email });
       const ticket = { name: doc.name, ticketCode: doc.ticketCode, status: doc.status, seat: doc.seat || null };
-      sendTicket(email, doc.name, ticket, settings.event).catch(e => console.error('Ticket email failed:', e.message));
+      sendTicket({ to: email, name: doc.name, ticket, settings, siteUrl: siteUrl(req) }).catch(e => console.error('Ticket email failed:', e.message));
       return res.status(201).json({ ok: true, ...ticket });
     } catch (e) {
       if (e.code === 11000) {

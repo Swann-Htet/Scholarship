@@ -1,6 +1,8 @@
 // Single source of truth for site content + design. The API merges whatever the admin saved on top of this.
 // Imported by both the Express server and the React client.
 
+import { DEFAULT_EMAIL } from './emailTemplate.js';
+
 export const FONT_OPTIONS = {
   display: [
     { name: 'Fraunces', generic: 'serif', spec: '' },
@@ -66,6 +68,11 @@ export const defaultSettings = {
     sound: true,
     speed: 1 // 0.25 - 3
   },
+  branding: {
+    logoId: '', // id of the uploaded MFU logo (Admin > Design > Logo)
+    logoAlt: 'Mae Fah Luang University'
+  },
+  email: JSON.parse(JSON.stringify(DEFAULT_EMAIL)), // editable in Admin > Emails
   registration: {
     allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], // only these email domains can register (one registration per email)
     seatSelection: true, // visitors can pick a seat on the 3D map (otherwise one is assigned automatically)
@@ -126,13 +133,9 @@ export const defaultSettings = {
       ['15:15', 'Reflection and sharing', 'What changed in how we see each other.'],
       ['16:00', 'Closing', 'Thank you and photos.']
     ],
-    team: [
-      ['Project Manager', 'Overall coordination and partners'],
-      ['Programme Lead', 'Panel and workshop flow'],
-      ['Game Leaders', 'Activity 3, the language exchange game'],
-      ['Registration Team', 'Check-in at 08:30'],
-      ['Logistics', 'Venue, lunch boxes and materials'],
-      ['Media', 'Promotion and photography']
+    people: [ // organisers, contributors and staff shown on the website (Admin > Content > People). photo = uploaded image id
+      { name: "Myanmar Students' Association", role: 'Organiser', group: 'organizer', photo: '' },
+      { name: 'GRD, Mae Fah Luang University', role: 'Partner', group: 'organizer', photo: '' }
     ],
     faq: [
       ['Who can join?', 'Thai and international students. The goal is a mix, so please come even if you do not know anyone.'],

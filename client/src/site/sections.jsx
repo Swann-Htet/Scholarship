@@ -21,6 +21,7 @@ export function Nav({ settings }) {
   useEffect(() => { const k = e => e.key === 'Escape' && setOpen(false); addEventListener('keydown', k); return () => removeEventListener('keydown', k); }, []);
   return (
     <header className="nav" id="nav">
+      {settings.branding?.logoId && <img className="mfu-logo" src={`/api/asset/${settings.branding.logoId}`} alt={settings.branding.logoAlt} />}
       <a className="logo" href="#top" aria-label="Home">
         <svg viewBox="0 0 40 28" width="40" height="28" aria-hidden="true"><circle className="lg-a" cx="14" cy="14" r="11" /><circle className="lg-b" cx="26" cy="14" r="11" /></svg>
         <span>{settings.hero.line1.split(' ').map((w, i) => <React.Fragment key={i}>{i > 0 && <br />}{w}</React.Fragment>)}</span>
@@ -248,19 +249,33 @@ export function Schedule({ settings }) {
   );
 }
 
+const GROUPS = [['organizer', 'Organizers'], ['contributor', 'Contributors'], ['staff', 'Staff']];
+const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => [...w][0]).join('').toUpperCase();
+
 export function Team({ settings }) {
+  const people = (settings.content.people || []).filter(p => p.name);
+  if (!people.length) return null;
   return (
     <section className="sec veil" id="team"><Doodles id="team" />
       <div className="wrap">
-        <Head kicker="The team">Students organising for students.</Head>
-        <div className="team-grid">
-          {settings.content.team.map((m, i) => (
-            <article key={i} className="member" tabIndex={0} data-reveal style={{ '--i': i }}>
-              <svg className="av" viewBox="0 0 46 46" aria-hidden="true"><circle cx="18" cy="23" r="13" fill="#FFB020" fillOpacity=".6" /><circle cx="28" cy="23" r="13" fill="#2DD4BF" fillOpacity=".5" /></svg>
-              <h3>{m[0]}</h3><p>{m[1]}</p>
-            </article>
-          ))}
-        </div>
+        <Head kicker="The people">Students organising for students.</Head>
+        {GROUPS.map(([key, title]) => {
+          const list = people.filter(p => p.group === key);
+          if (!list.length) return null;
+          return (
+            <div className="people-group" key={key}>
+              <h3 data-reveal>{title}</h3>
+              <div className="team-grid">
+                {list.map((p, i) => (
+                  <article key={i} className="person" tabIndex={0} data-reveal style={{ '--i': i % 6 }}>
+                    <span className="avatar">{p.photo ? <img src={`/api/asset/${p.photo}`} alt="" loading="lazy" /> : <b aria-hidden="true">{initials(p.name)}</b>}</span>
+                    <h4>{p.name}</h4>{p.role && <p>{p.role}</p>}
+                  </article>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -292,6 +307,7 @@ export function Footer({ settings }) {
     <footer className="foot">
       <div className="wrap foot-in">
         <div>
+          {settings.branding?.logoId && <img className="mfu-logo foot" src={`/api/asset/${settings.branding.logoId}`} alt={settings.branding.logoAlt} />}
           <p className="foot-title">{e.title}</p>
           <p className="foot-sub">Organised by the Myanmar Students' Association with GRD, {e.campus}.</p>
           {e.contactEmail && <p className="foot-sub">Contact: <a href={`mailto:${e.contactEmail}`} style={{ textDecoration: 'underline' }}>{e.contactEmail}</a></p>}

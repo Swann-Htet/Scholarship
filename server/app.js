@@ -9,6 +9,7 @@ const app = express();
 app.set('trust proxy', 1); // behind Vercel / a reverse proxy, so rate limiting sees the real visitor IP
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
+app.use('/api/admin/assets', express.json({ limit: '1.3mb' })); // image uploads (base64)
 app.use(express.json({ limit: '300kb' }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

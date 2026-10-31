@@ -4,6 +4,7 @@ import { api, getToken, setToken } from '../lib/api.js';
 import Dashboard from './Dashboard.jsx';
 import Registrations from './Registrations.jsx';
 import { CheckinTab, AdminsTab, SecurityTab } from './ExtraTabs.jsx';
+import EmailTab from './EmailTab.jsx';
 import { DesignTab, AnimationTab, ContentTab } from './SettingsTabs.jsx';
 import { defaultSettings } from '../../../shared/defaultSettings.js';
 
@@ -13,6 +14,7 @@ const TABS = [
   ['checkin', 'Check-in', 'M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 12h8'],
   ['admins', 'Admins', 'M12 3l8 3v6c0 4.500-3.400 8-8 9-4.600-1-8-4.500-8-9V6zM9 12l2 2 4-4'],
   ['security', 'Security', 'M12 3l9 16H3zM12 10v4M12 17v.500'],
+  ['email', 'Emails', 'M4 6h16v12H4zM4 7l8 6 8-6'],
   ['design', 'Design', 'M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.4-2.2-.6-1.2.2-2.3 1.5-2.3H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5z'],
   ['animation', 'Animation', 'M5 3l14 9-14 9z'],
   ['content', 'Content', 'M5 4h14M5 9h14M5 14h9M5 19h6']
@@ -72,7 +74,7 @@ export default function Admin() {
 
   if (!authed) return <Login onDone={() => setAuthed(true)} />;
 
-  const settingsTab = tab === 'design' || tab === 'animation' || tab === 'content';
+  const settingsTab = ['design', 'animation', 'content', 'email'].includes(tab);
   return (
     <div className="admin">
       <aside className="a-side">
@@ -104,12 +106,13 @@ export default function Admin() {
         {tab === 'admins' && <AdminsTab onAuthError={onAuthError} flash={flash} />}
         {tab === 'security' && <SecurityTab onAuthError={onAuthError} flash={flash} />}
         {settingsTab && !draft && <div className="a-card"><div className="sk sk-line" style={{ width: '30%' }} /><div className="sk sk-line" style={{ width: '80%', marginTop: 14 }} /><div className="sk sk-line" style={{ width: '65%', marginTop: 14 }} /></div>}
-        {settingsTab && draft && (
+        {tab === 'email' && draft && <EmailTab draft={draft} setDraft={setDraft} flash={flash} onAuthError={onAuthError} />}
+        {settingsTab && draft && tab !== 'email' && (
           <div className="a-split">
             <div className="a-form">
-              {tab === 'design' && <DesignTab draft={draft} setDraft={setDraft} />}
+              {tab === 'design' && <DesignTab draft={draft} setDraft={setDraft} flash={flash} onAuthError={onAuthError} />}
               {tab === 'animation' && <AnimationTab draft={draft} setDraft={setDraft} />}
-              {tab === 'content' && <ContentTab draft={draft} setDraft={setDraft} />}
+              {tab === 'content' && <ContentTab draft={draft} setDraft={setDraft} flash={flash} onAuthError={onAuthError} />}
             </div>
             <aside className="a-preview">
               <div className="a-preview-head"><span>Live website</span><a href="/" target="_blank" rel="noreferrer">Open ↗</a></div>

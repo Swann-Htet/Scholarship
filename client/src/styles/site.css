@@ -590,3 +590,17 @@ body.no-pin .stage { width: auto !important; opacity: 1 !important; transform: n
 .again button:disabled { opacity: .55; cursor: default; text-decoration: none; }
 .pulse-ring { transform-box: fill-box; transform-origin: center; animation: pulseRing 2.4s ease-out infinite; }
 @keyframes pulseRing { from { transform: scale(1); opacity: .8; } to { transform: scale(2.6); opacity: 0; } }
+
+/* ---- MFU logo, people ---- */
+.mfu-logo { height: 38px; width: auto; max-width: 120px; object-fit: contain; display: block; margin-right: 12px; padding-right: 12px; border-right: 1px solid var(--line); }
+.mfu-logo.foot { height: 54px; max-width: 180px; margin: 0 0 14px; padding: 0; border: 0; }
+@media (max-width: 860px) { .mfu-logo { height: 30px; max-width: 80px; margin-right: 8px; padding-right: 8px; } }
+.nav { justify-content: flex-start; gap: 6px; } .nav .links { margin-inline: auto; } .nav .nav-actions { margin-left: auto; }
+.people-group { margin-top: 34px; } .h2 + .people-group { margin-top: clamp(30px, 5vw, 52px); }
+.people-group > h3 { font: 600 .8rem var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--teal-t); margin: 0 0 14px; }
+.team-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); } @media (min-width: 700px) { .team-grid { grid-template-columns: repeat(3, 1fr); } } @media (min-width: 1000px) { .team-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; } }
+.person { position: relative; display: grid; justify-items: center; text-align: center; gap: 4px; padding: 22px 14px 18px; border-radius: var(--r, 26px); border: 1px solid var(--glass-b, var(--line)); background: var(--card); transition: transform .5s var(--spring), border-color .3s; }
+.person:hover { transform: translateY(-6px); border-color: var(--amber); }
+.person .avatar { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; margin-bottom: 8px; background: linear-gradient(135deg, var(--amber), var(--teal)); box-shadow: 0 10px 24px -12px rgba(0,0,0,.4); }
+.person .avatar img { width: 100%; height: 100%; object-fit: cover; } .person .avatar b { font: 700 1.5rem var(--display); color: #1D1B26; }
+.person h4 { margin: 0; font: 600 1.02rem/1.25 var(--display); letter-spacing: -.01em; } .person p { margin: 0; color: var(--mut); font-size: .88rem; }
