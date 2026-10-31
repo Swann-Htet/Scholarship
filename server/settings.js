@@ -27,11 +27,12 @@ const pick = (v, list, fb) => (list.includes(v) ? v : fb);
 const date = (v, fb) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : fb);
 const time = (v, fb) => (typeof v === 'string' && /^\d{2}:\d{2}$/.test(v) ? v : fb);
 const tuples = (v, n, fb, max = 30, len = 400) => (Array.isArray(v) ? v.slice(0, max).map(r => Array.from({ length: n }, (_, i) => str(Array.isArray(r) ? r[i] : '', len, ''))) : fb);
+const domains = (v, fb) => (Array.isArray(v) ? v.map(x => String(x).trim().toLowerCase().replace(/^@/, '')).filter(x => /^[a-z0-9.-]{3,60}$/.test(x) && x.includes('.')).slice(0, 10) : fb);
 const ICONS = ['i-lang', 'i-culture', 'i-incl', 'i-prac'];
 
 export function sanitize(input) {
-  const d = defaultSettings, i = isObj(input) ? input : {};
-  const ev = isObj(i.event) ? i.event : {}, he = isObj(i.hero) ? i.hero : {}, th = isObj(i.theme) ? i.theme : {}, an = isObj(i.animation) ? i.animation : {}, se = isObj(i.sections) ? i.sections : {}, co = isObj(i.content) ? i.content : {};
+  const d = defaultSettings, d0 = defaultSettings, i = isObj(input) ? input : {};
+  const ev = isObj(i.event) ? i.event : {}, he = isObj(i.hero) ? i.hero : {}, th = isObj(i.theme) ? i.theme : {}, an = isObj(i.animation) ? i.animation : {}, se = isObj(i.sections) ? i.sections : {}, rg = isObj(i.registration) ? i.registration : {}, co = isObj(i.content) ? i.content : {};
   const displayNames = FONT_OPTIONS.display.map(f => f.name), bodyNames = FONT_OPTIONS.body.map(f => f.name);
   return {
     event: {
@@ -50,6 +51,11 @@ export function sanitize(input) {
       background: bool(an.background, d.animation.background), blobOpacity: Math.round(num(an.blobOpacity, 0, 100, d.animation.blobOpacity)), doodles: bool(an.doodles, d.animation.doodles),
       people: bool(an.people, d.animation.people), marquee: bool(an.marquee, d.animation.marquee), reveal: bool(an.reveal, d.animation.reveal),
       pinnedWorkshop: bool(an.pinnedWorkshop, d.animation.pinnedWorkshop), sound: bool(an.sound, d.animation.sound), speed: num(an.speed, 0.25, 3, d.animation.speed)
+    },
+    registration: {
+      allowedDomains: (() => { const d = domains(rg.allowedDomains, d0.registration.allowedDomains); return d.length ? d : d0.registration.allowedDomains; })(),
+      seatSelection: bool(rg.seatSelection, d0.registration.seatSelection),
+      seatCols: Math.round(num(rg.seatCols, 4, 20, d0.registration.seatCols))
     },
     sections: Object.fromEntries(SECTION_KEYS.map(k => [k, bool(se[k], d.sections[k])])),
     content: {

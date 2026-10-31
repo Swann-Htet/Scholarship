@@ -66,6 +66,11 @@ export const defaultSettings = {
     sound: true,
     speed: 1 // 0.25 - 3
   },
+  registration: {
+    allowedDomains: ['lamduan.mfu.ac.th', 'mfu.ac.th'], // only these email domains can register (one registration per email)
+    seatSelection: true, // visitors can pick a seat on the 3D map (otherwise one is assigned automatically)
+    seatCols: 10 // seats per row on the seat map
+  },
   sections: { why: true, objectives: true, panel: true, workshop: true, rules: true, schedule: true, team: true, info: true },
   content: {
     greetings: [ // [text, language label, font stack]

@@ -39,7 +39,7 @@ export default function Registrations({ onAuthError, flash }) {
   return (
     <div className="a-card">
       <div className="a-toolbar">
-        <input type="search" placeholder="Search name, email, LINE ID or ticket" value={search} onChange={e => setSearch(e.target.value)} />
+        <input type="search" placeholder="Search name, email, LINE ID, seat or ticket" value={search} onChange={e => setSearch(e.target.value)} />
         <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
           <option value="">All statuses</option><option value="confirmed">Confirmed</option><option value="waitlist">Waitlist</option>
         </select>
@@ -48,14 +48,14 @@ export default function Registrations({ onAuthError, flash }) {
       </div>
       <div className="a-table-wrap">
         <table className="a-table">
-          <thead><tr><th>Name</th><th>Email</th><th>LINE ID</th><th>Status</th><th>Checked in</th><th>Registered</th><th /></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>LINE ID</th><th>Seat</th><th>Status</th><th>Checked in</th><th>Registered</th><th /></tr></thead>
           <tbody>
-            {rows === null && Array.from({ length: 6 }, (_, i) => <tr key={i}>{Array.from({ length: 7 }, (_, j) => <td key={j}><div className="sk" style={{ height: 14, width: j === 6 ? 30 : '80%', borderRadius: 6 }} /></td>)}</tr>)}
-            {rows && rows.length === 0 && <tr><td colSpan="7" className="empty">No registrations found.</td></tr>}
+            {rows === null && Array.from({ length: 6 }, (_, i) => <tr key={i}>{Array.from({ length: 8 }, (_, j) => <td key={j}><div className="sk" style={{ height: 14, width: j === 7 ? 30 : '80%', borderRadius: 6 }} /></td>)}</tr>)}
+            {rows && rows.length === 0 && <tr><td colSpan="8" className="empty">No registrations found.</td></tr>}
             {rows && rows.map(r => (
               <tr key={r._id}>
                 <td><strong>{r.name}</strong><small>{r.ticketCode}</small></td>
-                <td>{r.email}</td><td>{r.lineId}</td>
+                <td>{r.email}</td><td>{r.lineId}</td><td><b>{r.seat || '–'}</b></td>
                 <td><button className={`pill ${r.status} btn-pill`} title="Click to switch" onClick={() => patch(r, { status: r.status === 'confirmed' ? 'waitlist' : 'confirmed' })}>{r.status}</button></td>
                 <td><label className="switch"><input type="checkbox" checked={!!r.checkedIn} onChange={e => patch(r, { checkedIn: e.target.checked })} aria-label={`Checked in: ${r.name}`} /><i /></label></td>
                 <td>{fmt(r.createdAt)}</td>

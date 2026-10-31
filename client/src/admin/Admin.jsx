@@ -3,12 +3,16 @@ import '../styles/admin.css';
 import { api, getToken, setToken } from '../lib/api.js';
 import Dashboard from './Dashboard.jsx';
 import Registrations from './Registrations.jsx';
+import { CheckinTab, AdminsTab, SecurityTab } from './ExtraTabs.jsx';
 import { DesignTab, AnimationTab, ContentTab } from './SettingsTabs.jsx';
 import { defaultSettings } from '../../../shared/defaultSettings.js';
 
 const TABS = [
   ['dashboard', 'Dashboard', 'M4 13h6V4H4zM14 20h6V4h-6zM4 20h6v-3H4z'],
   ['registrations', 'Registrations', 'M16 11a4 4 0 1 0-8 0M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6'],
+  ['checkin', 'Check-in', 'M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 12h8'],
+  ['admins', 'Admins', 'M12 3l8 3v6c0 4.500-3.400 8-8 9-4.600-1-8-4.500-8-9V6zM9 12l2 2 4-4'],
+  ['security', 'Security', 'M12 3l9 16H3zM12 10v4M12 17v.500'],
   ['design', 'Design', 'M12 3a9 9 0 1 0 0 18c1.5 0 2-1 1.4-2.2-.6-1.2.2-2.3 1.5-2.3H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5z'],
   ['animation', 'Animation', 'M5 3l14 9-14 9z'],
   ['content', 'Content', 'M5 4h14M5 9h14M5 14h9M5 19h6']
@@ -96,6 +100,9 @@ export default function Admin() {
 
         {tab === 'dashboard' && <Dashboard onAuthError={onAuthError} />}
         {tab === 'registrations' && <Registrations onAuthError={onAuthError} flash={flash} />}
+        {tab === 'checkin' && <CheckinTab onAuthError={onAuthError} flash={flash} />}
+        {tab === 'admins' && <AdminsTab onAuthError={onAuthError} flash={flash} />}
+        {tab === 'security' && <SecurityTab onAuthError={onAuthError} flash={flash} />}
         {settingsTab && !draft && <div className="a-card"><div className="sk sk-line" style={{ width: '30%' }} /><div className="sk sk-line" style={{ width: '80%', marginTop: 14 }} /><div className="sk sk-line" style={{ width: '65%', marginTop: 14 }} /></div>}
         {settingsTab && draft && (
           <div className="a-split">

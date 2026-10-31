@@ -129,6 +129,11 @@ export function ContentTab({ draft, setDraft }) {
       <Card title="Sections" hint="Hide any section from the website.">
         {SECTION_KEYS.map(k => <Toggle key={k} label={SECTION_LABELS[k]} checked={draft.sections[k]} onChange={v => setDraft(d => setPath(d, ['sections', k], v))} />)}
       </Card>
+      <Card title="Registration rules" hint="Who can register and how seats work. Each email can register once, confirmed with an emailed code.">
+        <Text label="Allowed email domains" hint="Separate with commas" value={draft.registration.allowedDomains.join(', ')} max={200} onChange={v => setDraft(d => setPath(d, ['registration', 'allowedDomains'], v.split(',').map(x => x.trim()).filter(Boolean)))} />
+        <Toggle label="Let people pick a seat" hint="Shows the 3D cinema seat map. Off = seats are assigned automatically." checked={draft.registration.seatSelection} onChange={v => setDraft(d => setPath(d, ['registration', 'seatSelection'], v))} />
+        <Range label="Seats per row" value={draft.registration.seatCols} min={4} max={20} onChange={v => setDraft(d => setPath(d, ['registration', 'seatCols'], v))} />
+      </Card>
       <Card title="Event details" hint="Shown in the hero, the ticket and the calendar file.">
         <Text label="Event title" value={e.title} onChange={v => ev('title', v)} />
         <Text label="Date (calendar)" type="date" value={e.dateISO} onChange={v => ev('dateISO', v)} />

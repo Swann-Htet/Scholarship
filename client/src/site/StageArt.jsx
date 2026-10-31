@@ -45,11 +45,14 @@ export function StageArt({ i, fx }) {
   }
   return (
     <svg className="art" viewBox="0 0 280 280" aria-hidden="true">
-      {[[55, 92], [225, 92], [55, 205], [225, 205]].map((p, n) => <path key={n} className="edge" pathLength="1" d={`M${p[0]} ${p[1]}L140 148`} stroke={n % 2 ? '#2DD4BF' : '#FFB020'} fill="none" strokeWidth="2.4" strokeLinecap="round" style={{ animationDelay: `${n * .4}s` }} />)}
-      <circle cx="140" cy="148" r="22" fill="url(#gM)" className="nodeC" />
+      <defs><linearGradient id="gM" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#FFB020" /><stop offset="1" stopColor="#2DD4BF" /></linearGradient></defs>
+      <circle cx="140" cy="148" r="86" fill="url(#zB)" opacity=".5" />
+      <circle className="ringd" cx="140" cy="148" r="86" fill="none" stroke="url(#gM)" strokeWidth="1.6" style={{ transformOrigin: '140px 148px', opacity: .55 }} />
+      <circle className="pulse-ring" cx="140" cy="148" r="22" fill="none" stroke="url(#gM)" strokeWidth="2" />
+      <circle cx="140" cy="148" r="18" fill="url(#gM)" className="nodeC" />
+      <path d="M131 148l6 6 12-13" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       <F x={55} y={90} s={.55} shirt={0} skin={0} hair={0} hairColor={0} mode="cheer" ph={0} /><F x={225} y={90} s={.55} shirt={1} skin={3} hair={1} hairColor={2} mode="cheer" ph={.5} flip />
       <F x={55} y={203} s={.55} shirt={2} skin={1} hair={3} hairColor={3} mode="cheer" ph={.9} /><F x={225} y={203} s={.55} shirt={3} skin={2} hair={2} hairColor={1} mode="cheer" ph={.2} flip />
-      <defs><linearGradient id="gM" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#FFB020" /><stop offset="1" stopColor="#2DD4BF" /></linearGradient></defs>
     </svg>
   );
 }

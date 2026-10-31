@@ -559,3 +559,34 @@ body.no-pin .stage { width: auto !important; opacity: 1 !important; transform: n
 .stage .ringd { fill: none; stroke-width: 1.8; stroke-dasharray: 3 9; animation: spin 50s linear infinite; }
 
 .stage .art { background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.7), transparent 72%); border-radius: 50%; }
+
+/* ---- 3D seat map ---- */
+.seat-card { margin-bottom: 16px; padding: clamp(14px, 3vw, 24px); }
+.seat-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 8px; }
+.seat-head h3 { font: 700 1.25rem var(--display); letter-spacing: -.02em; margin: 0; } .seat-head .hint { margin: 2px 0 0; }
+.seat-legend { display: flex; gap: 14px; font-size: .82rem; color: var(--mut); } .seat-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.seat-legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; } .seat-legend .free { background: var(--teal); } .seat-legend .taken { background: #8d889a; } .seat-legend .mine { background: var(--amber); }
+.seatmap { position: relative; width: 100%; aspect-ratio: 16 / 10; min-height: 260px; border-radius: calc(var(--r, 26px) - 6px); overflow: hidden; background: radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--teal) 22%, transparent), transparent 70%), linear-gradient(180deg, #17151f, #0d0c12); touch-action: pan-y; }
+.seatmap canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+.seat-tip { position: absolute; transform: translate(-50%, -140%); padding: 5px 10px; border-radius: 999px; background: #fff; color: #1D1B26; font: 700 .78rem var(--body); pointer-events: none; white-space: nowrap; box-shadow: 0 6px 18px -6px rgba(0,0,0,.5); }
+.seat-tip.taken { background: #3a3745; color: #fff; }
+.seat-skeleton { aspect-ratio: 16 / 10; min-height: 260px; border-radius: 18px; }
+.seat-picked { margin: 12px 2px 0; font-size: .95rem; } .seat-picked b { font: 700 1.05rem var(--display); color: var(--amber-t); } .seat-picked button { background: none; border: 0; color: var(--mut); text-decoration: underline; cursor: pointer; font: inherit; margin-left: 6px; }
+.seat-fallback { color: var(--mut); font-size: .9rem; padding: 12px; }
+.t-seat { font: 800 1.3rem var(--display); }
+
+/* ---- email code step ---- */
+.otp-form .step-title { margin-bottom: 6px; } .otp-sub { color: var(--mut); margin: 0 0 18px; }
+.otp input { width: 100%; text-align: center; font: 700 clamp(1.8rem, 8vw, 2.6rem) var(--mono); letter-spacing: .5em; padding: 14px 8px 14px calc(8px + .5em); border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); color: var(--fg); outline: none; transition: border-color .3s, box-shadow .3s; }
+.otp input:focus { border-color: transparent; box-shadow: 0 0 0 4px rgba(45,212,191,.22), 0 0 0 1.5px var(--teal); }
+.otp.shake { animation: shake .26s linear; }
+.otp-foot { justify-content: space-between; margin-top: 18px; }
+
+/* ---- frozen visitor warning ---- */
+.freeze { border: 1.5px solid #e0603f; background: color-mix(in srgb, #e0603f 12%, var(--card)); border-radius: var(--r, 26px); padding: 28px 24px; text-align: center; margin-bottom: 18px; }
+.freeze h3 { font: 700 1.5rem var(--display); margin: 8px 0 6px; } .freeze p { color: var(--mut); max-width: 52ch; margin: 0 auto 10px; }
+.freeze-ic { width: 46px; height: 46px; margin: 0 auto; fill: none; stroke: #e0603f; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; animation: ddp 1.6s ease-in-out infinite alternate; }
+.freeze-time { font: 600 1.05rem var(--body); color: var(--fg) !important; } .freeze-time b { font: 700 1.5rem var(--mono); } .freeze button { background: none; border: 0; text-decoration: underline; cursor: pointer; font: inherit; color: var(--fg); }
+.again button:disabled { opacity: .55; cursor: default; text-decoration: none; }
+.pulse-ring { transform-box: fill-box; transform-origin: center; animation: pulseRing 2.4s ease-out infinite; }
+@keyframes pulseRing { from { transform: scale(1); opacity: .8; } to { transform: scale(2.6); opacity: 0; } }

@@ -17,7 +17,7 @@ api/index.js   Vercel entry point for the API
 vercel.json    Vercel configuration
 ```
 
-The registration form asks only for **name, email and LINE ID**. Everything you see on the website (colours, fonts, animations, text, sections) can be changed from the admin panel without touching code.
+The registration form asks only for **name, MFU email and LINE ID**, confirms the email with a 6-digit code, and lets people pick a seat on a 3D cinema seat map. Everything you see on the website (colours, fonts, animations, text, sections) can be changed from the admin panel without touching code.
 
 ---
 
@@ -102,12 +102,73 @@ How the pieces fit on Vercel: `vercel.json` builds `client/` into static files a
 
 ---
 
+## Email setup (verification codes and tickets)
+
+People must verify their MFU email with a code, so the server needs an email account to send from. The easiest free option is a Gmail account:
+
+1. Use (or create) a Gmail account just for the event.
+2. Turn on **2-Step Verification**: Google Account → Security → 2-Step Verification.
+3. Create an **App password**: Google Account → Security → search "App passwords" → name it `Global Dialogues` → **Create**. Copy the 16 letters (no spaces).
+4. Put these in `.env` **and** in Vercel (Settings → Environment Variables), then redeploy:
+
+| Name | Value |
+|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USER` | your Gmail address |
+| `SMTP_PASS` | the 16-letter app password |
+| `MAIL_FROM` | `Global Dialogues <yourgmail@gmail.com>` (optional) |
+
+Gmail allows about 500 emails per day, which is plenty. Any other SMTP service works too (Brevo, Mailgun, Zoho): just use its host, port, username and password.
+
+**Testing without email:** set `DEV_SHOW_OTP=1` in your local `.env`. The code is then printed in the terminal and shown on the page. This is ignored on Vercel, so it can never leak a code in production.
+
+## How registration works
+
+1. The visitor picks a seat on the 3D map (optional), enters name, **MFU email** and LINE ID.
+2. Only the email domains listed in **Admin → Content → Registration rules** are accepted (default `@lamduan.mfu.ac.th` and `@mfu.ac.th`).
+3. A 6-digit code is emailed. It expires in 10 minutes, allows 5 tries and can be re-sent after 45 seconds.
+4. After the correct code the ticket (QR code + seat) is created and a copy is emailed.
+5. **One registration per mailbox**: `name+tag@lamduan.mfu.ac.th` counts as `name@lamduan.mfu.ac.th`. LINE IDs are unique too.
+6. The chosen seat is held while waiting for the code. If the event is full, people join the waitlist (no seat).
+
+## Bot and scam protection (freeze for 15 minutes)
+
+A visitor's IP address is **frozen for 15 minutes** and sees a warning when they:
+
+- fill the hidden trap field, or paste links / spam text in the form (instant freeze),
+- send the form without a valid, timed token (bots that post directly), or too fast,
+- guess the email code wrongly 5 times, or request too many codes,
+- fail admin login too many times.
+
+Wrong email domains only collect warnings (many students share one campus Wi-Fi address, so one freeze would hit everybody). The warning says the visitor's **IP address, browser details and attempt were logged**. The site does not collect GPS location, and the message does not claim to. Admins can see and **unfreeze** visitors in **Admin → Security**.
+
+## Check-in with QR codes
+
+- **Admin → Check-in** has a camera scanner. Point it at the QR on a ticket (or type the code).
+- To avoid giving volunteers an admin login, create a **check-in link** (label + how long it works). It opens `/checkin/<secret>` on their phone with just the scanner. Links expire automatically and can be switched off at any time. The secret is shown only once when you create it.
+- Scanning marks the person as checked in. A second scan says "already checked in"; waitlist people are rejected.
+- Camera access needs HTTPS, which Vercel provides.
+
+## Admins
+
+The **owner** is the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your environment. In **Admin → Admins** the owner and any admin can add more admins (email + password, 10+ characters), reset their passwords or remove them. Passwords are stored as salted hashes.
+
+## Seats
+
+The seat map is drawn with three.js (loaded only when the register section comes into view). The number of seats is the capacity you set in Admin → Content; **Seats per row** changes the shape. On laptops drag to look around; on phones tap a seat. Seats are labelled like a cinema (A1, B7...).
+
+---
+
 ## The admin panel (`/admin`)
 
 | Tab | What you can do |
 |---|---|
 | Dashboard | Totals, capacity bar, registrations per day, latest sign-ups |
-| Registrations | Search, switch confirmed ⇄ waitlist, tick check-in, delete, **copy emails**, **export CSV** |
+| Registrations | Search, seat, switch confirmed ⇄ waitlist, tick check-in, delete, **copy emails**, **export CSV** |
+| Check-in | QR scanner and volunteer check-in links |
+| Admins | Add / remove admins, reset passwords |
+| Security | See and unfreeze frozen visitors |
 | Design | Light/dark default, two accent colours, backgrounds, heading and body fonts, corner roundness |
 | Animation | Speed, animated people, floating shapes, background, scroll reveal, pinned workshop, sound |
 | Content | Show/hide sections, event details and capacity, hero text, greetings (with a font per language), objectives, panel, workshop stages, rules, schedule, team, FAQ |
@@ -117,9 +178,9 @@ Changes go live when you press **Save changes**. **Reset to defaults** loads the
 ## Security notes
 
 - Passwords are never stored in the database or in the code: the admin login uses `.env` values and signs a 12-hour token.
-- The API validates every input, rate-limits registration and login, and escapes CSV cells. Colours and fonts saved from the admin are checked against allowed values.
+- The API validates every input, rate-limits and freezes abusive visitors, and escapes CSV cells. Colours and fonts saved from the admin are checked against allowed values.
 - The registration form has a hidden honeypot field and a minimum fill time to block simple bots.
-- Names, emails and LINE IDs are personal data. The website says they are used only for this event; delete the registrations (Admin → Registrations, or Atlas) after the post-event report as promised.
+- Names, emails, LINE IDs and IP addresses are personal data. The website says they are used only for this event; delete the registrations (Admin → Registrations, or Atlas) after the post-event report as promised.
 
 ## Content still to confirm
 

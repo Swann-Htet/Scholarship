@@ -93,3 +93,17 @@ body.admin-body ::-webkit-scrollbar-thumb { background: #cfc9bd; border-radius: 
 .a-preview iframe { width: 100%; height: 560px; border: 1px solid #e8e3d8; border-radius: 12px; background: #fff; } .a-preview p { font-size: .8rem; color: #8a8692; margin-top: 8px; }
 .a-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #1D1B26; color: #fff; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: .92rem; z-index: 100; animation: atoast .35s cubic-bezier(.34,1.56,.64,1); } .a-toast.bad { background: #b3261e; }
 @keyframes atoast { from { opacity: 0; transform: translate(-50%, 14px); } }
+
+/* check-in, admins, security */
+.a-split2 { display: grid; gap: 16px; align-items: start; } @media (min-width: 1100px) { .a-split2 { grid-template-columns: minmax(300px, 440px) 1fr; } }
+.a-inline { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; } .a-inline input, .a-inline select { flex: 1 1 160px; width: auto; }
+.a-fresh { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 16px; padding: 14px; border-radius: 14px; background: #fff8e6; border: 1px solid #f3dd9b; }
+.a-fresh code, .a-fresh-pw code { display: block; margin: 8px 0; padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px solid #ecdfae; font: 500 .8rem 'DM Mono', monospace; word-break: break-all; }
+.a-fresh-pw { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #fff8e6; border: 1px solid #f3dd9b; } .a-fresh-pw code { display: inline; margin: 0 4px; }
+.a-link-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #efebe1; } .a-link-row:last-child { border: 0; } .a-link-row > div { flex: 1; min-width: 0; display: grid; } .a-link-row span { color: #6b6872; font-size: .85rem; }
+.pill.active { background: #d7f5ee; color: #0a6b5f; } .pill.off, .pill.expired { background: #ece8de; color: #6b6872; }
+.a-btn.danger { color: #b3261e; } .a-btn.danger:hover:not(:disabled) { background: #fde7e3; border-color: #f3b9b2; }
+.a-rowtools { display: flex; gap: 8px; flex-wrap: wrap; }
+.a-rules { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 8px; color: #4a4753; font-size: .92rem; }
+.a-table .ua { max-width: 260px; font-size: .75rem; color: #8a8692; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.a-table code { font: 500 .8rem 'DM Mono', monospace; }

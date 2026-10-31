@@ -2,7 +2,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { connectDB } from './db.js';
-import { publicRouter, adminRouter } from './routes.js';
+import publicRouter from './routes/public.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 app.set('trust proxy', 1); // behind Vercel / a reverse proxy, so rate limiting sees the real visitor IP

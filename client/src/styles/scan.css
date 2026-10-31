@@ -1,0 +1,22 @@
+.scan { display: grid; gap: 14px; font-family: 'DM Sans', system-ui, sans-serif; }
+.scan h2 { margin: 0; font-size: 1.2rem; letter-spacing: -.02em; }
+.scan-view { position: relative; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; background: #111; border: 3px solid transparent; transition: border-color .25s; }
+.scan-view video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scan-view.ok { border-color: #22c55e; } .scan-view.bad { border-color: #ef4444; }
+.scan-frame { position: absolute; inset: 18%; pointer-events: none; }
+.scan-frame b { position: absolute; width: 26px; height: 26px; border: 4px solid #fff; opacity: .9; }
+.scan-frame b:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; } .scan-frame b:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 10px 0 0; }
+.scan-frame b:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; } .scan-frame b:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
+.scan-cam { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; margin: 0; color: #fff; font-size: .95rem; background: rgba(0,0,0,.6); }
+.scan-result { display: grid; gap: 2px; padding: 16px 18px; border-radius: 16px; background: #f1eee6; color: #1D1B26; min-height: 74px; align-content: center; transition: background .25s, color .25s; }
+.scan-result strong { font-size: 1.35rem; letter-spacing: -.02em; } .scan-result span { font-size: .95rem; opacity: .85; }
+.scan-result.ok { background: #16a34a; color: #fff; } .scan-result.bad { background: #dc2626; color: #fff; }
+.scan-manual { display: flex; gap: 8px; } .scan-manual input { flex: 1; min-width: 0; padding: 12px 14px; border: 1px solid #d9d4c8; border-radius: 12px; font: 600 1rem 'DM Mono', monospace; letter-spacing: .08em; background: #fff; color: #1D1B26; }
+.scan-manual button { padding: 12px 18px; border: 0; border-radius: 12px; background: #1D1B26; color: #fff; font-weight: 700; cursor: pointer; }
+.scan-count { margin: 0; color: #6b6872; font-size: .88rem; text-align: center; }
+
+/* public check-in page */
+body.checkin-body { margin: 0; background: #F5F3EE; min-height: 100svh; font-family: 'DM Sans', system-ui, sans-serif; color: #1D1B26; }
+.checkin-page { max-width: 520px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px; }
+.checkin-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; } .checkin-brand small { display: block; font-weight: 500; color: #6b6872; }
+.checkin-err { background: #fff; border: 1px solid #e8e3d8; border-radius: 18px; padding: 24px; text-align: center; }
