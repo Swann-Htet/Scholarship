@@ -71,7 +71,7 @@ export const defaultSettings = {
     greetings: [ // [text, language label, font stack]
       ['Hello', 'English', "'Fraunces', serif"],
       ['สวัสดี', 'Thai', "'Prompt', sans-serif"],
-      ['မင်္ဂလာပါ', 'Burmese', "'Pyidaungsu', 'Padauk', 'Noto Sans Myanmar', sans-serif"],
+      ['မင်္ဂလာပါ', 'Burmese', "'Noto Serif Myanmar', 'Padauk', serif"],
       ['你好', 'Chinese', "'Ma Shan Zheng', 'Noto Serif SC', serif"],
       ['안녕하세요', 'Korean', "'Gowun Dodum', sans-serif"],
       ['नमस्ते', 'Hindi', "'Tiro Devanagari Hindi', serif"],

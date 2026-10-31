@@ -557,3 +557,5 @@ body.no-pin .stage { width: auto !important; opacity: 1 !important; transform: n
 
 .form-msg { margin-top: 12px; color: var(--danger); font-size: .9rem; min-height: 1.2em; }
 .stage .ringd { fill: none; stroke-width: 1.8; stroke-dasharray: 3 9; animation: spin 50s linear infinite; }
+
+.stage .art { background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.7), transparent 72%); border-radius: 50%; }
