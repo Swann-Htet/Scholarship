@@ -70,3 +70,11 @@ export const DEFAULT_EMAIL = {
 </div>`
   }
 };
+
+/**
+ * Fingerprints of OLD built-in designs. If a saved template is byte-for-byte an old default (the admin never changed it),
+ * the server shows and sends the current default instead, so design upgrades reach people who only ever pressed Save.
+ * Anything the admin edited is left alone.
+ */
+export const fingerprint = s => { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) >>> 0; return x.toString(16) + ':' + s.length; };
+export const LEGACY_DEFAULTS = { otp: new Set([]), ticket: new Set(['e63487b1:2284']) }; // two-column ticket email (v1)

@@ -606,4 +606,4 @@ body.no-pin .stage { width: auto !important; opacity: 1 !important; transform: n
 .person h4 { margin: 0; font: 600 1.02rem/1.25 var(--display); letter-spacing: -.01em; } .person p { margin: 0; color: var(--mut); font-size: .88rem; }
 
 .seat-picked { color: var(--mut); }
-.seatmap.admin canvas { cursor: pointer; }
+.seatmap.editable canvas { cursor: pointer; }

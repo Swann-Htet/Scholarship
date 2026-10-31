@@ -198,7 +198,7 @@ export default function SeatMap3D({ layout, taken = [], occupants = {}, selected
 
   if (!webgl) return <p className="seat-fallback">Your browser cannot show the 3D seating plan.</p>;
   return (
-    <div className={`seatmap${admin ? ' admin' : ''}`} ref={mount} role="img" aria-label={`Seating plan with ${layout.seats.length} seats. ${taken.length} are taken.${mine ? ' Your seat is ' + mine + '.' : ''}`}>
+    <div className={`seatmap${admin ? ' editable' : ''}`} ref={mount} role="img" aria-label={`Seating plan with ${layout.seats.length} seats. ${taken.length} are taken.${mine ? ' Your seat is ' + mine + '.' : ''}`}>
       {tip && <div className={`seat-tip${tip.taken ? ' taken' : ''}`} style={{ left: tip.x, top: tip.y }}>{tip.text}</div>}
     </div>
   );

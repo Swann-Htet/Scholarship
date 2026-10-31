@@ -1,6 +1,6 @@
 import { defaultSettings, FONT_OPTIONS, SECTION_KEYS } from '../shared/defaultSettings.js';
 import { Setting, Asset } from './models.js';
-import { stripUnsafe } from '../shared/emailTemplate.js';
+import { stripUnsafe, fingerprint, LEGACY_DEFAULTS, DEFAULT_EMAIL } from '../shared/emailTemplate.js';
 import { uniqueLabels } from '../shared/layout.js';
 import { Registration } from './models.js';
 
@@ -18,7 +18,10 @@ function deepMerge(base, over) {
 
 export async function getSettings() {
   const doc = await Setting.findOne({ key: 'site' }).lean();
-  return deepMerge(clone(defaultSettings), doc?.data || {});
+  const out = deepMerge(clone(defaultSettings), doc?.data || {});
+  // an unchanged copy of an OLD default design is upgraded to the current default (customised templates are kept)
+  for (const k of Object.keys(LEGACY_DEFAULTS)) if (LEGACY_DEFAULTS[k].has(fingerprint(String(out.email?.[k]?.html || '')))) out.email[k] = clone(DEFAULT_EMAIL[k]);
+  return out;
 }
 
 // ---- validation: never trust what the admin form (or anyone with a stolen token) sends ----
