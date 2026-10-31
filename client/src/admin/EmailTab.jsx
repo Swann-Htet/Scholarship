@@ -22,7 +22,7 @@ export default function EmailTab({ draft, setDraft, flash, onAuthError }) {
     return {
       ...SAMPLE_VARS, eventTitle: e.title, date: e.dateLabel, time: `${e.startTime} to ${e.endTime}`, venue: e.venue, campus: e.campus, accent1: draft.theme.accent1, accent2: draft.theme.accent2, siteUrl: location.origin,
       logo: logoId ? `<img src="/api/asset/${logoId}" alt="" height="40" style="display:block;height:40px;width:auto;border:0">` : '',
-      qr: qr ? `<img src="${qr}" alt="QR" width="130" height="130" style="display:block;width:130px;height:130px;border:0">` : '',
+      qr: qr ? `<img src="${qr}" alt="QR" width="170" height="170" style="display:block;width:170px;height:170px;border:0">` : '',
       seatLine: `Seat <b>${SAMPLE_VARS.seat}</b><br>`
     };
   }, [draft.event, draft.branding.logoId, draft.theme.accent1, draft.theme.accent2, qr]);

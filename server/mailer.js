@@ -41,7 +41,7 @@ async function baseVars(settings, siteUrl) {
 
 async function qrAttachment(code) {
   const buf = await QRCode.toBuffer(code, { width: 300, margin: 1, color: { dark: '#0B0B0F', light: '#FFFFFF' } });
-  return { attachment: { filename: 'ticket-qr.png', content: buf, contentType: 'image/png', cid: 'qr' }, html: '<img src="cid:qr" alt="Ticket QR code" width="130" height="130" style="display:block;width:130px;height:130px;border:0">' };
+  return { attachment: { filename: 'ticket-qr.png', content: buf, contentType: 'image/png', cid: 'qr' }, html: '<img src="cid:qr" alt="Ticket QR code" width="170" height="170" style="display:block;width:170px;height:170px;border:0">' };
 }
 
 async function deliver(to, template, vars, attachments) {
@@ -67,7 +67,7 @@ export async function sendTicket({ to, name, ticket, settings, siteUrl }) {
   const { vars, attachments } = await baseVars(settings, siteUrl);
   const qr = await qrAttachment(ticket.ticketCode);
   await deliver(to, settings.email.ticket, {
-    ...vars, name, ticketCode: ticket.ticketCode, seat: ticket.seat || '', seatLine: ticket.seat ? `Seat <b>${esc(ticket.seat)}</b><br>` : '',
+    ...vars, name, ticketCode: ticket.ticketCode, seat: ticket.seat || '', seatDisplay: ticket.seat || 'Not assigned yet', seatLine: ticket.seat ? `Seat <b>${esc(ticket.seat)}</b><br>` : '',
     status: ticket.status, statusLabel: wait ? 'Waitlist' : 'Confirmed', headline: wait ? 'You are on the waitlist' : 'You are registered', qr: qr.html
   }, [...attachments, qr.attachment]);
 }
@@ -78,7 +78,7 @@ export async function sendTest({ to, which, subject, html, settings, siteUrl }) 
   const { vars, attachments } = await baseVars(settings, siteUrl);
   const extra = { ...SAMPLE_VARS, ...vars }; // real event details win over the sample ones
   let all = attachments;
-  if (which === 'ticket') { const qr = await qrAttachment(SAMPLE_VARS.ticketCode); all = [...attachments, qr.attachment]; extra.qr = qr.html; extra.seatLine = `Seat <b>${esc(SAMPLE_VARS.seat)}</b><br>`; }
+  if (which === 'ticket') { const qr = await qrAttachment(SAMPLE_VARS.ticketCode); all = [...attachments, qr.attachment]; extra.qr = qr.html; extra.seatDisplay = SAMPLE_VARS.seat; extra.seatLine = `Seat <b>${esc(SAMPLE_VARS.seat)}</b><br>`; }
   const r = await deliver(to, { subject: '[Test] ' + subject, html }, extra, all);
   return r.subject;
 }
