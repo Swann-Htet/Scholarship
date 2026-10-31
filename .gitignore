@@ -1,3 +1,9 @@
 .claude/
 node_modules/
-*.pyc
+client/node_modules/
+client/dist/
+.env
+.env.*
+!.env.example
+.vercel/
+*.log
