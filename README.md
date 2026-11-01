@@ -169,9 +169,64 @@ Tip: email apps are fussy. Keep layouts table-based with inline `style="..."` (l
 - Scanning marks the person as checked in. A second scan says "already checked in"; waitlist people are rejected.
 - Camera access needs HTTPS, which Vercel provides.
 
-## Admins
+## Admin sign-in and passwords
 
-The **owner** is the `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your environment. In **Admin → Admins** the owner and any admin can add more admins (email + password, 10+ characters), reset their passwords or remove them. Passwords are stored as salted hashes.
+The admin panel is at **`/admin`** (for example `https://your-site.vercel.app/admin`). Nobody can reach it without signing in.
+
+### Two kinds of admin
+
+| | Owner | Added admin |
+|---|---|---|
+| Where the account lives | Your **environment settings** (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) | The **database**, created in Admin → Admins |
+| Can use every tab | Yes | Yes |
+| Can add or remove admins | Yes | Yes (but not the owner) |
+| Password stored as | Plain text in the environment (never in the code or database) | A salted scrypt hash in the database |
+
+### Where the owner's password is
+
+- **Local computer:** the file `.env` in the project folder (it is git-ignored, so it never reaches GitHub). Open it in Notepad and look for `ADMIN_EMAIL=` and `ADMIN_PASSWORD=`.
+- **Live website:** Vercel → your project → **Settings → Environment Variables** → `ADMIN_EMAIL` and `ADMIN_PASSWORD`. The two places are independent, so set the same values in both if you want the same login.
+- **Never** put the password in the code, in a screenshot or in a chat.
+
+### Change the owner's password
+
+1. Choose a long new password (see the tips below).
+2. **Local:** edit `ADMIN_PASSWORD=` in `.env`, then stop and start `npm run dev`.
+3. **Vercel:** edit `ADMIN_PASSWORD` in Environment Variables, save, then **Deployments → ⋯ → Redeploy**.
+4. Sign in again. People who are already signed in stay signed in until their session ends (12 hours). To sign everybody out at once, also change `JWT_SECRET` and redeploy.
+
+The same steps change the owner's **email** (`ADMIN_EMAIL`). The email is not secret, only the password is.
+
+### Add another admin (Admin → Admins)
+
+1. Open **Admin → Admins**, type their email and a password of **at least 10 characters**. **Generate** makes a strong one for you.
+2. Press **Add admin**. The password is shown **once** on screen: copy it and send it to them privately (not in a public chat).
+3. They sign in at `/admin` with that email and password.
+
+### Reset or remove an admin
+
+- **New password:** Admin → Admins → **New password** next to their name. Send the new password to them privately.
+- **Remove:** Admin → Admins → **Remove**. They can no longer sign in. You cannot remove yourself or the owner.
+
+### Forgot your password?
+
+- **An added admin forgot theirs:** any other admin (or the owner) uses **New password** for them.
+- **The owner forgot theirs:** it is not stored anywhere you can read back, so set a new one: change `ADMIN_PASSWORD` in `.env` and in Vercel as above, then redeploy. Nobody can lock you out of your own server settings.
+- **Everyone is locked out:** the owner login always works with the environment values, so use that.
+
+### Tips for a good password
+
+- At least 12 characters; a few random words with numbers and a symbol works well.
+- A different password from your email, Gmail app password and database password.
+- A password manager makes this easy.
+- If a password, app password or database password was ever pasted into a chat or a screenshot, **change it** (Atlas → Database Access → Edit, Google → App passwords, and the admin password as above) and update `.env` and Vercel.
+
+### What protects the login
+
+- After **10 wrong attempts in 15 minutes** from one connection, that connection is frozen for 15 minutes (see Admin → Security). A frozen admin can be unfrozen from another connection.
+- Sessions last **12 hours** and end when the browser tab is closed. **Sign out** (bottom left of the panel) ends it immediately.
+- Passwords are compared in constant time, and added admins' passwords are stored only as salted hashes.
+- Always use the `https://` address so the password is encrypted in transit (Vercel does this for you).
 
 ## Seats
 
